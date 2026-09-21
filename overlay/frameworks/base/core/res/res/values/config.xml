@@ -49,4 +49,7 @@
         <item>35</item>
     </integer-array>
 
+    <!-- Whether device supports Smart Pixels -->
+    <bool name="config_enableSmartPixels">true</bool>
+
 </resources>
