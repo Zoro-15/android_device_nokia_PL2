@@ -1,16 +1,23 @@
 #!/bin/bash
 set -e
 
-# Initialize LineageOS-Revived 17.1 (Android 10 Q) using Crave's official pre-seeded project
+# ========================================================
+# keepQASSA 2.4 (Android 10 Q) Crave Build Script for Nokia PL2
+# ========================================================
+
+# Clean old local manifests
 rm -rf .repo/local_manifests
-repo init -u https://github.com/accupara/los18.1.git -b lineage-17.1 --depth=1 --git-lfs
+repo init -u https://github.com/keepQASSA/manifest -b Q --depth=1 --git-lfs
 
 # Pull public local manifest for Nokia PL2
 mkdir -p .repo/local_manifests
-curl -sL https://raw.githubusercontent.com/Zoro-15/android_device_nokia_PL2/lineage-17.1/lineage_pl2.xml -o .repo/local_manifests/lineage_pl2.xml
+curl -sL https://raw.githubusercontent.com/Zoro-15/android_device_nokia_PL2/lineage-17.1/qassa_pl2.xml -o .repo/local_manifests/qassa_pl2.xml
 
-# Sync repositories
-repo sync -c -j$(nproc --all) --force-sync --no-clone-bundle --no-tags --optimized-fetch --prune
+# Accelerated sync
+if [ -f "/opt/crave/resync.sh" ]; then
+    /opt/crave/resync.sh
+fi
+repo sync -c -j$(nproc --all) --force-sync --force-remove-dirty --no-clone-bundle --no-tags --optimized-fetch --prune
 
 # Fallback tree check
 if [ ! -f "device/nokia/PL2/device.mk" ]; then
@@ -23,9 +30,10 @@ fi
 # Build environment setup
 export WITHOUT_CHECK_API=true
 export SKIP_ABI_CHECKS=true
+export WITH_GAPPS=false
 
 source build/envsetup.sh
-lunch lineage_PL2-userdebug
+lunch qassa_PL2-userdebug
 
-# Compile LineageOS 17.1 flashable zip
-mka bacon -j$(nproc --all)
+# Compile keepQASSA
+mka qassa -j$(nproc --all)
