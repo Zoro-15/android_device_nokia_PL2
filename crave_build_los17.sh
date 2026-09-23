@@ -74,6 +74,22 @@ lunch lineage_PL2-userdebug
 echo "--> Compiling LineageOS-Revived 17.1 flashable zip..."
 mka bacon -j$(nproc --all)
 
+# ========================================================
+# PHASE 7: AUTOMATIC ARTIFACT UPLOAD (SAFEGUARD FOR EXPIRING DEVSPACES)
+# ========================================================
+OUT_ZIP=$(ls out/target/product/PL2/lineage-17.1-*.zip 2>/dev/null | head -n 1)
+if [ -f "$OUT_ZIP" ]; then
+    echo "========================================================"
+    echo "BUILD SUCCEEDED: $OUT_ZIP"
+    echo "File Size: $(du -h "$OUT_ZIP" | cut -f1)"
+    echo "Uploading to BashUpload (Download link is logged below)..."
+    curl -s bashupload.com -T "$OUT_ZIP"
+    echo ""
+    echo "MD5 Checksum:"
+    md5sum "$OUT_ZIP"
+    echo "========================================================"
+fi
+
 END_TIME=$(date +%s)
 ELAPSED=$((END_TIME - START_TIME))
 echo "=== Build Finished in $((ELAPSED / 60)) minutes! ==="

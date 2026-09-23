@@ -37,3 +37,19 @@ lunch qassa_PL2-userdebug
 
 # Compile keepQASSA
 mka qassa -j$(nproc --all)
+
+# ========================================================
+# AUTOMATIC ARTIFACT UPLOAD
+# ========================================================
+OUT_ZIP=$(ls out/target/product/PL2/qassa_*.zip 2>/dev/null | head -n 1)
+if [ -f "$OUT_ZIP" ]; then
+    echo "========================================================"
+    echo "BUILD SUCCEEDED: $OUT_ZIP"
+    echo "Uploading to BashUpload (Download link is logged below)..."
+    curl -s bashupload.com -T "$OUT_ZIP"
+    echo ""
+    echo "MD5 Checksum:"
+    md5sum "$OUT_ZIP"
+    echo "========================================================"
+fi
+
