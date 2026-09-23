@@ -19,8 +19,6 @@ export SKIP_ABI_CHECKS=true
 # ========================================================
 echo "--> Cleaning stale manifests, soong cache, and dirty prebuilts..."
 rm -rf .repo/local_manifests/
-rm -rf out/soong/build.*.ninja out/soong/.bootstrap out/soong/.minibootstrap
-rm -rf prebuilts/clang/host/linux-x86 prebuilts/gcc/linux-x86/aarch64 prebuilts/gcc/linux-x86/arm
 rm -rf device/nokia/PL2 device/nokia/sdm660-common kernel/nokia/sdm660 vendor/nokia
 
 # ========================================================
