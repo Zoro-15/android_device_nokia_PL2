@@ -17,7 +17,7 @@ export SKIP_ABI_CHECKS=true
 # ========================================================
 # PHASE 2: PRE-FLIGHT CLEANUP (PREVENT DIRTY CONFLICTS)
 # ========================================================
-echo "--> Cleaning stale manifests, soong cache, and dirty prebuilts..."
+echo "--> Cleaning stale manifests and device trees..."
 rm -rf .repo/local_manifests/
 rm -rf device/nokia/PL2 device/nokia/sdm660-common kernel/nokia/sdm660 vendor/nokia
 
