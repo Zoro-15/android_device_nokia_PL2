@@ -7,9 +7,6 @@ persist.capture.burst.exposures=0,-9,9
 
 # Display
 qemu.sf.lcd_density=420
-ro.surface_flinger.supports_background_blur=0
-ro.sf.blurs_are_expensive=1
-debug.sf.disable_backpressure=0
 
 # Fingerprint
 ro.hardware.fingerprint=elan
