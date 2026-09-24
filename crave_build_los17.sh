@@ -15,6 +15,33 @@ export WITHOUT_CHECK_API=true
 export SKIP_ABI_CHECKS=true
 
 # ========================================================
+# PHASE 1.5: LEGACY TOOLCHAIN SHIM (Ubuntu 24.04 / Crave)
+# Ubuntu 24.04 ships libncurses.so.6; the 2018-era prebuilt
+# clang-3289846 that LineageOS 17.1 uses for RenderScript
+# is linked against libncurses.so.5, which no longer exists.
+# Two symlinks restore it. Self-verifying so we fail in
+# 1 second instead of 4% into the build.
+# ========================================================
+echo "--> PHASE 1.5: Installing legacy library shims..."
+
+sudo ln -sf /lib/x86_64-linux-gnu/libncurses.so.6 /usr/lib/x86_64-linux-gnu/libncurses.so.5
+sudo ln -sf /lib/x86_64-linux-gnu/libtinfo.so.6    /usr/lib/x86_64-linux-gnu/libtinfo.so.5
+sudo ldconfig
+
+# Python 3.12 distutils shim (removed from stdlib in Ubuntu 24.04)
+if ! python3 -c "import distutils" >/dev/null 2>&1; then
+    python3 -m pip install --user --break-system-packages --quiet \
+        setuptools wheel 2>/dev/null || true
+fi
+
+# Verify the problem binary now loads before wasting the queue slot
+if ! prebuilts/clang/host/linux-x86/clang-3289846/bin/clang.real --version >/dev/null 2>&1; then
+    echo "!!! FATAL: clang-3289846 still broken. Missing libs:"
+    ldd prebuilts/clang/host/linux-x86/clang-3289846/bin/clang.real | grep "not found"
+    exit 1
+fi
+echo "--> PHASE 1.5: Toolchain OK."
+# ========================================================
 # PHASE 2: PRE-FLIGHT CLEANUP (PREVENT DIRTY CONFLICTS)
 # ========================================================
 echo "--> Cleaning stale manifests and device trees..."
@@ -47,6 +74,7 @@ git clone --depth=1 -b lineage-17.1 https://github.com/Zoro-15/proprietary_vendo
 # ========================================================
 # PHASE 5: CCACHE, LUNCH & COMPILATION
 # ========================================================
+sudo apt-get install -y ccache >/dev/null 2>&1 || true     # <-- ADDED
 CCACHE_BIN=""
 if command -v ccache &>/dev/null; then
     CCACHE_BIN="$(command -v ccache)"
@@ -74,6 +102,14 @@ echo "--> Cleaning stale intermediates (installclean)..."
 make installclean
 
 echo "--> Compiling LineageOS-Revived 17.1 flashable zip..."
+
+# Guard: re-verify the toolchain wasn't clobbered on the shared node
+if ! prebuilts/clang/host/linux-x86/clang-3289846/bin/clang.real --version >/dev/null 2>&1; then
+    echo "!!! FATAL: clang-3289846 broken just before mka. Re-run shim."
+    ldd prebuilts/clang/host/linux-x86/clang-3289846/bin/clang.real | grep "not found"
+    exit 1
+fi
+
 mka bacon -j$(nproc --all)
 
 # ========================================================
