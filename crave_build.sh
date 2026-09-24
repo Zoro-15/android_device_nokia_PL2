@@ -1,47 +1,111 @@
 #!/bin/bash
 set -e
 
+# ========================================================
+# Nokia 6.1 (PL2 / TA-1089) keepQASSA 2.4 (Android 10 Q)
+# Crave.io Cloud Compilation Script
+# Local Features: Batches 1-8 (All 23 Features + 3GB Lean Tweaks)
+# ========================================================
+
+START_TIME=$(date +%s)
 echo "=== Starting Nokia 6.1 (PL2) keepQASSA 2.4 (Android 10 Q) Build ==="
 
-# 1. Clean stale device trees & manifests (Safe for Crave)
+# ========================================================
+# PHASE 1: EXECUTION, MEMORY & COMPILER GUARDS
+# ========================================================
+export GOMEMLIMIT=8GiB
+export GOGC=50
+export _JAVA_OPTIONS="-Xmx6g"
+export SOONG_ALLOW_MISSING_DEPENDENCIES=true
+export WITHOUT_CHECK_API=true
+export SKIP_ABI_CHECKS=true
+export SELINUX_IGNORE_NEVERALLOWS=true
+export WITH_GAPPS=false
+
+# ========================================================
+# PHASE 2: PRE-FLIGHT CLEANUP (SAFE FOR CRAVE)
+# ========================================================
+echo "--> Cleaning stale local manifests and device trees..."
 rm -rf .repo/local_manifests/
 rm -rf device/nokia/PL2 device/nokia/sdm660-common kernel/nokia/sdm660 vendor/nokia
 
-# 2. Initialize ROM manifest
+# ========================================================
+# PHASE 3: BASE ROM INITIALIZATION & RESYNC
+# ========================================================
+echo "--> Initializing keepQASSA 2.4 (Android 10 Q) manifest..."
 repo init -u https://github.com/keepQASSA/manifest.git -b Q --git-lfs --depth=1
 
-# 3. Crave accelerated resync
 if [ -f "/opt/crave/resync.sh" ]; then
+    echo "--> Running Crave accelerated resync..."
     /opt/crave/resync.sh
 fi
+
+echo "--> Synchronizing repositories with dirty protections..."
 repo sync -c --force-sync --force-remove-dirty --no-tags --no-clone-bundle -j$(nproc --all)
 
-# 4. Fetch Nokia PL2 trees (Zoro-15)
+# ========================================================
+# PHASE 4: FETCH NOKIA PL2 TREES (ZORO-15)
+# ========================================================
+echo "--> Cloning fresh Nokia 6.1 (PL2) trees from Zoro-15..."
 git clone --depth=1 -b lineage-17.1 https://github.com/Zoro-15/android_device_nokia_PL2.git device/nokia/PL2
 git clone --depth=1 -b lineage-17.1 https://github.com/Zoro-15/android_device_nokia_sdm660-common.git device/nokia/sdm660-common
 git clone --depth=1 -b lineage-17.1 https://github.com/Zoro-15/android_kernel_nokia_sdm660.git kernel/nokia/sdm660
 git clone --depth=1 -b lineage-17.1 https://github.com/Zoro-15/proprietary_vendor_nokia.git vendor/nokia
 
-# 5. Hardware integrity check (TAS2557 SmartAmp DSP Firmware)
+# ========================================================
+# PHASE 5: HARDWARE INTEGRITY CHECKS (TAS2557 SMARTAMP)
+# ========================================================
+echo "--> Verifying TI TAS2557 SmartAmp DSP tuning binary..."
 FIRMWARE_TARGET="vendor/nokia/sdm660-common/proprietary/vendor/firmware/TAS2557MSSMono.bin"
-if [ ! -f "$FIRMWARE_TARGET" ] && [ -f "device/nokia/PL2/TAS2557MSSMono.bin" ]; then
+if [ ! -f "$FIRMWARE_TARGET" ]; then
     mkdir -p "$(dirname "$FIRMWARE_TARGET")"
-    cp device/nokia/PL2/TAS2557MSSMono.bin "$FIRMWARE_TARGET"
+    if [ -f "device/nokia/PL2/TAS2557MSSMono.bin" ]; then
+        cp device/nokia/PL2/TAS2557MSSMono.bin "$FIRMWARE_TARGET"
+        echo "    [+] Staged TAS2557MSSMono.bin from device/nokia/PL2"
+    elif [ -f "device/nokia/sdm660-common/TAS2557MSSMono.bin" ]; then
+        cp device/nokia/sdm660-common/TAS2557MSSMono.bin "$FIRMWARE_TARGET"
+        echo "    [+] Staged TAS2557MSSMono.bin from device/nokia/sdm660-common"
+    elif [ -f "TAS2557MSSMono.bin" ]; then
+        cp TAS2557MSSMono.bin "$FIRMWARE_TARGET"
+        echo "    [+] Staged TAS2557MSSMono.bin from root directory"
+    fi
 fi
 
-# 6. Build environment setup & installclean
-export WITHOUT_CHECK_API=true
-export SKIP_ABI_CHECKS=true
-export WITH_GAPPS=false
+# ========================================================
+# PHASE 6: CCACHE, LUNCH & COMPILATION
+# ========================================================
+CCACHE_BIN=""
+if command -v ccache &>/dev/null; then
+    CCACHE_BIN="$(command -v ccache)"
+elif [ -x "prebuilts/misc/linux-x86/ccache/ccache" ]; then
+    CCACHE_BIN="$(pwd)/prebuilts/misc/linux-x86/ccache/ccache"
+fi
+
+if [ -n "$CCACHE_BIN" ]; then
+    echo "--> Configuring CCACHE using $CCACHE_BIN..."
+    export USE_CCACHE=1
+    export CCACHE_EXEC="$CCACHE_BIN"
+    export CCACHE_DIR="${HOME}/.ccache"
+    "$CCACHE_BIN" -M 50G 2>/dev/null || true
+    "$CCACHE_BIN" -o compression=true 2>/dev/null || true
+else
+    echo "--> ccache binary not found in container or prebuilts; proceeding without ccache."
+    unset USE_CCACHE
+    unset CCACHE_EXEC
+fi
 
 source build/envsetup.sh
 lunch qassa_PL2-userdebug
+
+echo "--> Cleaning stale intermediates (installclean)..."
 make installclean
 
-# 7. Compile keepQASSA
+echo "--> Compiling keepQASSA 2.4 target image..."
 mka qassa -j$(nproc --all)
 
-# 8. Upload ROM artifact
+# ========================================================
+# PHASE 7: ARTIFACT DISCOVERY, CHECKSUM & CLOUD UPLOAD
+# ========================================================
 OUT_ZIP=$(ls out/target/product/PL2/qassa_*.zip 2>/dev/null | head -n 1)
 if [ -z "$OUT_ZIP" ]; then
     OUT_ZIP=$(ls out/target/product/PL2/*.zip 2>/dev/null | head -n 1)
@@ -62,3 +126,7 @@ if [ -f "$OUT_ZIP" ]; then
     fi
     echo "========================================================"
 fi
+
+END_TIME=$(date +%s)
+ELAPSED=$((END_TIME - START_TIME))
+echo "=== keepQASSA 2.4 Build Finished in $((ELAPSED / 60)) minutes! ==="

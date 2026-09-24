@@ -60,14 +60,31 @@ fi
 # ========================================================
 # PHASE 6: CCACHE, LUNCH & COMPILATION
 # ========================================================
-export USE_CCACHE=1
-export CCACHE_EXEC=$(which ccache)
-export CCACHE_DIR="${HOME}/.ccache"
-ccache -M 50G
-ccache -o compression=true
+CCACHE_BIN=""
+if command -v ccache &>/dev/null; then
+    CCACHE_BIN="$(command -v ccache)"
+elif [ -x "prebuilts/misc/linux-x86/ccache/ccache" ]; then
+    CCACHE_BIN="$(pwd)/prebuilts/misc/linux-x86/ccache/ccache"
+fi
+
+if [ -n "$CCACHE_BIN" ]; then
+    echo "--> Configuring CCACHE using $CCACHE_BIN..."
+    export USE_CCACHE=1
+    export CCACHE_EXEC="$CCACHE_BIN"
+    export CCACHE_DIR="${HOME}/.ccache"
+    "$CCACHE_BIN" -M 50G 2>/dev/null || true
+    "$CCACHE_BIN" -o compression=true 2>/dev/null || true
+else
+    echo "--> ccache binary not found in container or prebuilts; proceeding without ccache."
+    unset USE_CCACHE
+    unset CCACHE_EXEC
+fi
 
 source build/envsetup.sh
 lunch lineage_PL2-userdebug
+
+echo "--> Cleaning stale intermediates (installclean)..."
+make installclean
 
 echo "--> Compiling LineageOS-Revived 17.1 flashable zip..."
 mka bacon -j$(nproc --all)
