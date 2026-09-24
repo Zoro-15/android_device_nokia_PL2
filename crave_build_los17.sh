@@ -97,7 +97,20 @@ else
 fi
 
 source build/envsetup.sh
+
 lunch lineage_PL2-userdebug
+# Shim: reload LD_LIBRARY_PATH after envsetup in case soong_ui cleared it
+mkdir -p "$HOME/legacy-libs"
+ln -sf /lib/x86_64-linux-gnu/libncurses.so.6 "$HOME/legacy-libs/libncurses.so.5"
+ln -sf /lib/x86_64-linux-gnu/libtinfo.so.6    "$HOME/legacy-libs/libtinfo.so.5"
+export LD_LIBRARY_PATH="$HOME/legacy-libs:$LD_LIBRARY_PATH"
+# Verify the toolchain now loads before wasting the queue slot
+if ! prebuilts/clang/host/linux-x86/clang-3289846/bin/clang.real --version >/dev/null 2>&1; then
+    echo "!!! FATAL: clang-3289846 still broken. Missing:"
+    ldd prebuilts/clang/host/linux-x86/clang-3289846/bin/clang.real | grep "not found"
+    exit 1
+fi
+echo "--> Shim OK, toolchain loads."
 
 echo "--> Cleaning stale intermediates (installclean)..."
 make installclean
