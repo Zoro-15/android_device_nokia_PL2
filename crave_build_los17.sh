@@ -24,9 +24,11 @@ export SKIP_ABI_CHECKS=true
 # ========================================================
 echo "--> PHASE 1.5: Installing legacy library shims..."
 
-sudo ln -sf /lib/x86_64-linux-gnu/libncurses.so.6 /usr/lib/x86_64-linux-gnu/libncurses.so.5
-sudo ln -sf /lib/x86_64-linux-gnu/libtinfo.so.6    /usr/lib/x86_64-linux-gnu/libtinfo.so.5
-sudo ldconfig
+# Create symlinks in $HOME — no sudo, no system modification
+mkdir -p "$HOME/legacy-libs"
+ln -sf /lib/x86_64-linux-gnu/libncurses.so.6 "$HOME/legacy-libs/libncurses.so.5"
+ln -sf /lib/x86_64-linux-gnu/libtinfo.so.6    "$HOME/legacy-libs/libtinfo.so.5"
+export LD_LIBRARY_PATH="$HOME/legacy-libs:${LD_LIBRARY_PATH:-}"
 
 # Python 3.12 distutils shim (removed from stdlib in Ubuntu 24.04)
 if ! python3 -c "import distutils" >/dev/null 2>&1; then
@@ -74,7 +76,6 @@ git clone --depth=1 -b lineage-17.1 https://github.com/Zoro-15/proprietary_vendo
 # ========================================================
 # PHASE 5: CCACHE, LUNCH & COMPILATION
 # ========================================================
-sudo apt-get install -y ccache >/dev/null 2>&1 || true     # <-- ADDED
 CCACHE_BIN=""
 if command -v ccache &>/dev/null; then
     CCACHE_BIN="$(command -v ccache)"
