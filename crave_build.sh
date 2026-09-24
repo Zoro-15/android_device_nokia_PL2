@@ -53,26 +53,7 @@ git clone --depth=1 -b lineage-17.1 https://github.com/Zoro-15/android_kernel_no
 git clone --depth=1 -b lineage-17.1 https://github.com/Zoro-15/proprietary_vendor_nokia.git vendor/nokia
 
 # ========================================================
-# PHASE 5: HARDWARE INTEGRITY CHECKS (TAS2557 SMARTAMP)
-# ========================================================
-echo "--> Verifying TI TAS2557 SmartAmp DSP tuning binary..."
-FIRMWARE_TARGET="vendor/nokia/sdm660-common/proprietary/vendor/firmware/TAS2557MSSMono.bin"
-if [ ! -f "$FIRMWARE_TARGET" ]; then
-    mkdir -p "$(dirname "$FIRMWARE_TARGET")"
-    if [ -f "device/nokia/PL2/TAS2557MSSMono.bin" ]; then
-        cp device/nokia/PL2/TAS2557MSSMono.bin "$FIRMWARE_TARGET"
-        echo "    [+] Staged TAS2557MSSMono.bin from device/nokia/PL2"
-    elif [ -f "device/nokia/sdm660-common/TAS2557MSSMono.bin" ]; then
-        cp device/nokia/sdm660-common/TAS2557MSSMono.bin "$FIRMWARE_TARGET"
-        echo "    [+] Staged TAS2557MSSMono.bin from device/nokia/sdm660-common"
-    elif [ -f "TAS2557MSSMono.bin" ]; then
-        cp TAS2557MSSMono.bin "$FIRMWARE_TARGET"
-        echo "    [+] Staged TAS2557MSSMono.bin from root directory"
-    fi
-fi
-
-# ========================================================
-# PHASE 6: CCACHE, LUNCH & COMPILATION
+# PHASE 5: CCACHE, LUNCH & COMPILATION
 # ========================================================
 CCACHE_BIN=""
 if command -v ccache &>/dev/null; then
@@ -104,7 +85,7 @@ echo "--> Compiling keepQASSA 2.4 target image..."
 mka qassa -j$(nproc --all)
 
 # ========================================================
-# PHASE 7: ARTIFACT DISCOVERY, CHECKSUM & CLOUD UPLOAD
+# PHASE 6: ARTIFACT DISCOVERY, CHECKSUM & CLOUD UPLOAD
 # ========================================================
 OUT_ZIP=$(ls out/target/product/PL2/qassa_*.zip 2>/dev/null | head -n 1)
 if [ -z "$OUT_ZIP" ]; then

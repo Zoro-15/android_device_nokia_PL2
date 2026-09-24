@@ -45,20 +45,7 @@ git clone --depth=1 -b lineage-17.1 https://github.com/Zoro-15/android_kernel_no
 git clone --depth=1 -b lineage-17.1 https://github.com/Zoro-15/proprietary_vendor_nokia.git vendor/nokia
 
 # ========================================================
-# PHASE 5: HARDWARE INTEGRITY CHECKS (SMARTAMP & FIRMWARE)
-# ========================================================
-echo "--> Verifying TAS2557 SmartAmp DSP firmware..."
-FIRMWARE_TARGET="vendor/nokia/sdm660-common/proprietary/vendor/firmware/TAS2557MSSMono.bin"
-if [ ! -f "$FIRMWARE_TARGET" ]; then
-    echo "Staging TAS2557MSSMono.bin into vendor tree..."
-    mkdir -p "$(dirname "$FIRMWARE_TARGET")"
-    if [ -f "device/nokia/PL2/TAS2557MSSMono.bin" ]; then
-        cp device/nokia/PL2/TAS2557MSSMono.bin "$FIRMWARE_TARGET"
-    fi
-fi
-
-# ========================================================
-# PHASE 6: CCACHE, LUNCH & COMPILATION
+# PHASE 5: CCACHE, LUNCH & COMPILATION
 # ========================================================
 CCACHE_BIN=""
 if command -v ccache &>/dev/null; then
@@ -90,7 +77,7 @@ echo "--> Compiling LineageOS-Revived 17.1 flashable zip..."
 mka bacon -j$(nproc --all)
 
 # ========================================================
-# PHASE 7: AUTOMATIC ARTIFACT UPLOAD (SAFEGUARD FOR EXPIRING DEVSPACES)
+# PHASE 6: AUTOMATIC ARTIFACT UPLOAD (SAFEGUARD FOR EXPIRING DEVSPACES)
 # ========================================================
 OUT_ZIP=$(ls out/target/product/PL2/lineage-17.1-*.zip 2>/dev/null | head -n 1)
 if [ -f "$OUT_ZIP" ]; then
