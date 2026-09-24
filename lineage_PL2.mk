@@ -43,6 +43,12 @@ PRODUCT_MODEL := Nokia 6.1
 
 PRODUCT_GMS_CLIENTID_BASE := android-hmd
 
+# Maintainer & Build Type
+LINEAGE_BUILDTYPE := UNOFFICIAL
+PRODUCT_PROPERTY_OVERRIDES += \
+    ro.lineage.maintainer=Zoro-15 \
+    ro.build.maintainer=Zoro-15
+
 PRODUCT_BUILD_PROP_OVERRIDES += \
     PRODUCT_DEVICE=PL2_sprout \
     PRODUCT_NAME=Plate2_00WW \
