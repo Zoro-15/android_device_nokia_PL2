@@ -1,18 +1,17 @@
 #!/bin/bash
-set -e -x
+set -e 
 cd /crave-devspaces/los17_build
 
 # ── env guards ──
 export GOMEMLIMIT=8GiB GOGC=50 _JAVA_OPTIONS="-Xmx6g"
 export ALLOW_MISSING_DEPENDENCIES=true WITHOUT_CHECK_API=true SKIP_ABI_CHECKS=true
-export LC_ALL=C TZ=UTC BUILD_USERNAME=Zoro-15 BUILD_HOSTNAME=crave
-ulimit -n 65536 || true
+export BUILD_USERNAME=Zoro-15 BUILD_HOSTNAME=crave
 
 # ── cleanup ──
 rm -rf .repo/local_manifests device/nokia/PL2 device/nokia/sdm660-common kernel/nokia/sdm660 vendor/nokia
 
 # ── manifest + local manifest + sync ──
-repo init -u https://github.com/LineageOS-Revived/android.git -b lineage-17.1 --git-lfs
+repo init -u https://github.com/LineageOS-Revived/android.git -b lineage-17.1 --git-lfs --depth=1
 mkdir -p .repo/local_manifests
 cat > .repo/local_manifests/nokia.xml <<'XML'
 <?xml version="1.0" encoding="UTF-8"?>
