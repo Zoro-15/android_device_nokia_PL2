@@ -1,147 +1,86 @@
 #!/bin/bash
-set -e
+set -e -x
+cd /crave-devspaces/los17_build
 
-# ========================================================
-# PHASE 1: EXECUTION & MEMORY GUARDS
-# ========================================================
-START_TIME=$(date +%s)
-echo "=== Starting Nokia 6.1 (PL2) LineageOS-Revived 17.1 Build ==="
+# ── env guards ──
+export GOMEMLIMIT=8GiB GOGC=50 _JAVA_OPTIONS="-Xmx6g"
+export ALLOW_MISSING_DEPENDENCIES=true WITHOUT_CHECK_API=true SKIP_ABI_CHECKS=true
+export LC_ALL=C TZ=UTC BUILD_USERNAME=Zoro-15 BUILD_HOSTNAME=crave
+ulimit -n 65536 || true
 
-export GOMEMLIMIT=8GiB
-export GOGC=50
-export _JAVA_OPTIONS="-Xmx6g"
-export SOONG_ALLOW_MISSING_DEPENDENCIES=true
-export WITHOUT_CHECK_API=true
-export SKIP_ABI_CHECKS=true
+# ── cleanup ──
+rm -rf .repo/local_manifests device/nokia/PL2 device/nokia/sdm660-common kernel/nokia/sdm660 vendor/nokia
 
-# ========================================================
-# PHASE 1.5: LEGACY TOOLCHAIN SHIM (Ubuntu 24.04 / Crave)
-# Ubuntu 24.04 ships libncurses.so.6; the 2018-era prebuilt
-# clang-3289846 that LineageOS 17.1 uses for RenderScript
-# is linked against libncurses.so.5, which no longer exists.
-# Two symlinks restore it. Self-verifying so we fail in
-# 1 second instead of 4% into the build.
-# ========================================================
-echo "--> PHASE 1.5: Installing legacy library shims..."
+# ── manifest + local manifest + sync ──
+repo init -u https://github.com/LineageOS-Revived/android.git -b lineage-17.1 --git-lfs
+mkdir -p .repo/local_manifests
+cat > .repo/local_manifests/nokia.xml <<'XML'
+<?xml version="1.0" encoding="UTF-8"?>
+<manifest>
+  <remote name="zoro" fetch="https://github.com/Zoro-15" revision="lineage-17.1"/>
+  <project path="device/nokia/PL2"           name="android_device_nokia_PL2"           remote="zoro"/>
+  <project path="device/nokia/sdm660-common" name="android_device_nokia_sdm660-common" remote="zoro"/>
+  <project path="kernel/nokia/sdm660"        name="android_kernel_nokia_sdm660"        remote="zoro"/>
+  <project path="vendor/nokia"               name="proprietary_vendor_nokia"           remote="zoro"/>
+</manifest>
+XML
+[ -f /opt/crave/resync.sh ] && /opt/crave/resync.sh
+repo sync -c --force-sync --force-remove-dirty --no-tags --no-clone-bundle -j$(nproc)
 
-# Create symlinks in $HOME — no sudo, no system modification
-mkdir -p "$HOME/legacy-libs"
-ln -sf /lib/x86_64-linux-gnu/libncurses.so.6 "$HOME/legacy-libs/libncurses.so.5"
-ln -sf /lib/x86_64-linux-gnu/libtinfo.so.6    "$HOME/legacy-libs/libtinfo.so.5"
-export LD_LIBRARY_PATH="$HOME/legacy-libs:${LD_LIBRARY_PATH:-}"
-
-# Python 3.12 distutils shim (removed from stdlib in Ubuntu 24.04)
-if ! python3 -c "import distutils" >/dev/null 2>&1; then
-    python3 -m pip install --user --break-system-packages --quiet \
-        setuptools wheel 2>/dev/null || true
-fi
-
-# Verify the problem binary now loads before wasting the queue slot
-if ! prebuilts/clang/host/linux-x86/clang-3289846/bin/clang.real --version >/dev/null 2>&1; then
-    echo "!!! FATAL: clang-3289846 still broken. Missing libs:"
-    ldd prebuilts/clang/host/linux-x86/clang-3289846/bin/clang.real | grep "not found"
-    exit 1
-fi
-echo "--> PHASE 1.5: Toolchain OK."
-# ========================================================
-# PHASE 2: PRE-FLIGHT CLEANUP (PREVENT DIRTY CONFLICTS)
-# ========================================================
-echo "--> Cleaning stale manifests and device trees..."
-rm -rf .repo/local_manifests/
-rm -rf device/nokia/PL2 device/nokia/sdm660-common kernel/nokia/sdm660 vendor/nokia
-
-# ========================================================
-# PHASE 3: BASE ROM INITIALIZATION & RESYNC
-# ========================================================
-echo "--> Initializing LineageOS-Revived 17.1 manifest..."
-repo init -u https://github.com/LineageOS-Revived/android.git -b lineage-17.1 --git-lfs --depth=1
-
-if [ -f "/opt/crave/resync.sh" ]; then
-    echo "--> Running Crave accelerated resync..."
-    /opt/crave/resync.sh
-fi
-
-echo "--> Finalizing sync with dirty protections..."
-repo sync -c --force-sync --force-remove-dirty --no-tags --no-clone-bundle -j$(nproc --all)
-
-# ========================================================
-# PHASE 4: CLONING NOKIA 6.1 (PL2) SOURCE TREES (ZORO-15)
-# ========================================================
-echo "--> Fetching Nokia 6.1 (PL2) trees from Zoro-15..."
-git clone --depth=1 -b lineage-17.1 https://github.com/Zoro-15/android_device_nokia_PL2.git device/nokia/PL2
-git clone --depth=1 -b lineage-17.1 https://github.com/Zoro-15/android_device_nokia_sdm660-common.git device/nokia/sdm660-common
-git clone --depth=1 -b lineage-17.1 https://github.com/Zoro-15/android_kernel_nokia_sdm660.git kernel/nokia/sdm660
-git clone --depth=1 -b lineage-17.1 https://github.com/Zoro-15/proprietary_vendor_nokia.git vendor/nokia
-
-# ========================================================
-# PHASE 5: CCACHE, LUNCH & COMPILATION
-# ========================================================
-CCACHE_BIN=""
-if command -v ccache &>/dev/null; then
-    CCACHE_BIN="$(command -v ccache)"
-elif [ -x "prebuilts/misc/linux-x86/ccache/ccache" ]; then
-    CCACHE_BIN="$(pwd)/prebuilts/misc/linux-x86/ccache/ccache"
-fi
-
-if [ -n "$CCACHE_BIN" ]; then
-    echo "--> Configuring CCACHE using $CCACHE_BIN..."
-    export USE_CCACHE=1
-    export CCACHE_EXEC="$CCACHE_BIN"
-    export CCACHE_DIR="${HOME}/.ccache"
-    "$CCACHE_BIN" -M 50G 2>/dev/null || true
-    "$CCACHE_BIN" -o compression=true 2>/dev/null || true
+# ── libncurses5 + libtinfo5 (real .deb, system path) ──
+if [ -f /usr/lib/x86_64-linux-gnu/libncurses.so.5 ] && \
+   [ -f /usr/lib/x86_64-linux-gnu/libtinfo.so.5 ]; then
+    echo ">>> libncurses5/libtinfo5 already present"
 else
-    echo "--> ccache binary not found in container or prebuilts; proceeding without ccache."
-    unset USE_CCACHE
-    unset CCACHE_EXEC
+    echo ">>> Installing libncurses5 + libtinfo5..."
+    sudo apt-get update -qq 2>/dev/null || true
+    POOL="http://archive.ubuntu.com/ubuntu/pool/universe/n/ncurses"
+    TINFO=$(curl -sL "$POOL/" | grep -oE "libtinfo5_[^\"<> ]+_amd64\.deb"   | sort -V | tail -1)
+    NCURS=$(curl -sL "$POOL/" | grep -oE "libncurses5_[^\"<> ]+_amd64\.deb" | sort -V | tail -1)
+    if [ -z "$TINFO" ] || [ -z "$NCURS" ]; then
+        echo "!!! FATAL: could not find libtinfo5/libncurses5 in Ubuntu pool"
+        exit 1
+    fi
+    wget -q "$POOL/$TINFO" -O /tmp/libtinfo5.deb
+    wget -q "$POOL/$NCURS" -O /tmp/libncurses5.deb
+    sudo apt-get install -y /tmp/libtinfo5.deb /tmp/libncurses5.deb
+    rm -f /tmp/libtinfo5.deb /tmp/libncurses5.deb
+    echo ">>> Dependency fix complete"
 fi
 
-source build/envsetup.sh
+# ── verify toolchain before burning the queue slot ──
+if [ -d prebuilts/clang/host/linux-x86/clang-3289846/bin ]; then
+    if ! prebuilts/clang/host/linux-x86/clang-3289846/bin/clang.real --version >/dev/null 2>&1; then
+        echo "!!! FATAL:"; ldd prebuilts/clang/host/linux-x86/clang-3289846/bin/clang.real | grep "not found"; exit 1
+    fi
+    echo "--> toolchain OK"
+fi
 
+# ── ccache (in-tree only, no install) ──
+if [ -x prebuilts/misc/linux-x86/ccache/ccache ]; then
+    export USE_CCACHE=1
+    export CCACHE_EXEC="$(pwd)/prebuilts/misc/linux-x86/ccache/ccache"
+    export CCACHE_DIR="$HOME/.ccache"
+    "$CCACHE_EXEC" -M 50G 2>/dev/null || true
+fi
+
+# ── envsetup (some internal cmds return non-zero) ──
+set +e; source build/envsetup.sh; set -e
 lunch lineage_PL2-userdebug
-# Shim: reload LD_LIBRARY_PATH after envsetup in case soong_ui cleared it
-mkdir -p "$HOME/legacy-libs"
-ln -sf /lib/x86_64-linux-gnu/libncurses.so.6 "$HOME/legacy-libs/libncurses.so.5"
-ln -sf /lib/x86_64-linux-gnu/libtinfo.so.6    "$HOME/legacy-libs/libtinfo.so.5"
-export LD_LIBRARY_PATH="$HOME/legacy-libs:$LD_LIBRARY_PATH"
-# Verify the toolchain now loads before wasting the queue slot
-if ! prebuilts/clang/host/linux-x86/clang-3289846/bin/clang.real --version >/dev/null 2>&1; then
-    echo "!!! FATAL: clang-3289846 still broken. Missing:"
-    ldd prebuilts/clang/host/linux-x86/clang-3289846/bin/clang.real | grep "not found"
-    exit 1
-fi
-echo "--> Shim OK, toolchain loads."
 
-echo "--> Cleaning stale intermediates (installclean)..."
+# ── final guard ──
+if ! prebuilts/clang/host/linux-x86/clang-3289846/bin/clang.real --version >/dev/null 2>&1; then
+    echo "!!! FATAL before mka:"; ldd prebuilts/clang/host/linux-x86/clang-3289846/bin/clang.real | grep "not found"; exit 1
+fi
+
+# ── build ──
 make installclean
+mka bacon
 
-echo "--> Compiling LineageOS-Revived 17.1 flashable zip..."
-
-# Guard: re-verify the toolchain wasn't clobbered on the shared node
-if ! prebuilts/clang/host/linux-x86/clang-3289846/bin/clang.real --version >/dev/null 2>&1; then
-    echo "!!! FATAL: clang-3289846 broken just before mka. Re-run shim."
-    ldd prebuilts/clang/host/linux-x86/clang-3289846/bin/clang.real | grep "not found"
-    exit 1
-fi
-
-mka bacon -j$(nproc --all)
-
-# ========================================================
-# PHASE 6: AUTOMATIC ARTIFACT UPLOAD (SAFEGUARD FOR EXPIRING DEVSPACES)
-# ========================================================
-OUT_ZIP=$(ls out/target/product/PL2/lineage-17.1-*.zip 2>/dev/null | head -n 1)
-if [ -f "$OUT_ZIP" ]; then
-    echo "========================================================"
-    echo "BUILD SUCCEEDED: $OUT_ZIP"
-    echo "File Size: $(du -h "$OUT_ZIP" | cut -f1)"
-    echo "Uploading to BashUpload (Download link is logged below)..."
-    curl -s bashupload.com -T "$OUT_ZIP"
-    echo ""
-    echo "MD5 Checksum:"
-    md5sum "$OUT_ZIP"
-    echo "========================================================"
-fi
-
-END_TIME=$(date +%s)
-ELAPSED=$((END_TIME - START_TIME))
-echo "=== Build Finished in $((ELAPSED / 60)) minutes! ==="
+# ── upload ──
+Z=$(ls out/target/product/PL2/lineage-17.1-*.zip 2>/dev/null | head -n1)
+[ -f "$Z" ] && {
+    echo "=== BUILD OK: $Z ($(du -h "$Z" | cut -f1)) ==="
+    curl -s bashupload.com -T "$Z" || curl -s --upload-file "$Z" https://transfer.sh/ || true
+    md5sum "$Z"
+}
