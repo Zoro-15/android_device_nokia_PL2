@@ -6,7 +6,7 @@ set -e -x
 # Crave.io Cloud Compilation Script
 # Local Features: Batches 1-8 (All 23 Features + 3GB Lean Tweaks)
 # ========================================================
-WORKDIR="/crave-devspaces/los17_build"
+WORKDIR="/crave-devspaces/qassa_build"
 mkdir -p "$WORKDIR" && cd "$WORKDIR"
 echo "=== Starting Nokia 6.1 (PL2) keepQASSA 2.4 (Android 10 Q) Build ==="
 
