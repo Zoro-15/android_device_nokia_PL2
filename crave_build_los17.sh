@@ -1,7 +1,19 @@
 #!/bin/bash
-set -e 
-cd /crave-devspaces/los17_build
+set -e
 
+WORKDIR="/crave-devspaces/los17_build"
+mkdir -p "$WORKDIR"
+cd "$WORKDIR" || { echo "!!! FATAL: cannot cd into $WORKDIR"; exit 1; }
+
+# ensure repo is available
+if ! command -v repo >/dev/null 2>&1; then
+    mkdir -p "$HOME/bin"
+    curl -s https://storage.googleapis.com/git-repo-downloads/repo > "$HOME/bin/repo"
+    chmod a+rx "$HOME/bin/repo"
+    export PATH="$HOME/bin:$PATH"
+fi
+
+# rest of your script...
 # ── env guards ──
 export GOMEMLIMIT=8GiB GOGC=50 _JAVA_OPTIONS="-Xmx6g"
 export ALLOW_MISSING_DEPENDENCIES=true WITHOUT_CHECK_API=true SKIP_ABI_CHECKS=true
