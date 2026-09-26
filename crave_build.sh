@@ -52,7 +52,7 @@ XML
 if [ -f /usr/bin/resync ]; then /usr/bin/resync; else /opt/crave/resync.sh; fi
 repo sync -c --force-sync --force-remove-dirty --no-tags --no-clone-bundle -j$(nproc)
 
-# Legacy ncurses dependencies
+# Legacy ncurses dependencies for android 10
 if [ ! -f /usr/lib/x86_64-linux-gnu/libncurses.so.5 ] || [ ! -f /usr/lib/x86_64-linux-gnu/libtinfo.so.5 ]; then
     sudo apt-get update -qq 2>/dev/null || true
     sudo apt-get install -y -qq wget curl 2>/dev/null || true
