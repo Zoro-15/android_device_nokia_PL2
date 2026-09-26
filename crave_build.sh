@@ -1,15 +1,19 @@
 #!/bin/bash
-set -e
+set -e -x
 
 # ========================================================
 # Nokia 6.1 (PL2 / TA-1089) keepQASSA 2.4 (Android 10 Q)
 # Crave.io Cloud Compilation Script
 # Local Features: Batches 1-8 (All 23 Features + 3GB Lean Tweaks)
 # ========================================================
-
-START_TIME=$(date +%s)
+WORKDIR="/crave-devspaces/los17_build"
+mkdir -p "$WORKDIR" && cd "$WORKDIR"
 echo "=== Starting Nokia 6.1 (PL2) keepQASSA 2.4 (Android 10 Q) Build ==="
 
+# Repo
+if ! command -v repo >/dev/null 2>&1; then
+    mkdir -p "$HOME/bin" && curl -L https://storage.googleapis.com/git-repo-downloads/repo -o "$HOME/bin/repo" && chmod a+rx "$HOME/bin/repo" && export PATH="$HOME/bin:$PATH"
+fi
 # ========================================================
 # PHASE 1: EXECUTION, MEMORY & COMPILER GUARDS
 # ========================================================
@@ -21,93 +25,67 @@ export WITHOUT_CHECK_API=true
 export SKIP_ABI_CHECKS=true
 export SELINUX_IGNORE_NEVERALLOWS=true
 export WITH_GAPPS=false
-
+export BUILD_USERNAME=Zoro-15 BUILD_HOSTNAME=crave
 # ========================================================
 # PHASE 2: PRE-FLIGHT CLEANUP (SAFE FOR CRAVE)
 # ========================================================
 echo "--> Cleaning stale local manifests and device trees..."
-rm -rf .repo/local_manifests/
-rm -rf device/nokia/PL2 device/nokia/sdm660-common kernel/nokia/sdm660 vendor/nokia
+# Clean previous device manifests/repos
+rm -rf .repo/local_manifests device/nokia/PL2 device/nokia/sdm660-common kernel/nokia/sdm660 vendor/nokia
 
-# ========================================================
-# PHASE 3: BASE ROM INITIALIZATION & RESYNC
-# ========================================================
+# Init + local manifest
 echo "--> Initializing keepQASSA 2.4 (Android 10 Q) manifest..."
-repo init -u https://github.com/keepQASSA/manifest.git -b Q --git-lfs --depth=1
+repo init --depth=1 -u https://github.com/keepQASSA/manifest -b Q --git-lfs
 
-if [ -f "/opt/crave/resync.sh" ]; then
-    echo "--> Running Crave accelerated resync..."
-    /opt/crave/resync.sh
+mkdir -p .repo/local_manifests
+cat > .repo/local_manifests/nokia.xml <<'XML'
+<?xml version="1.0" encoding="UTF-8"?>
+<manifest>
+  <remote name="zoro" fetch="https://github.com/Zoro-15" revision="lineage-17.1"/>
+  <project path="device/nokia/PL2" name="android_device_nokia_PL2" remote="zoro"/>
+  <project path="device/nokia/sdm660-common" name="android_device_nokia_sdm660-common" remote="zoro"/>
+  <project path="kernel/nokia/sdm660" name="android_kernel_nokia_sdm660" remote="zoro"/>
+  <project path="vendor/nokia" name="proprietary_vendor_nokia" remote="zoro"/>
+</manifest>
+XML
+
+
+# Crave resync + source sync
+if [ -f /usr/bin/resync ]; then /usr/bin/resync; else /opt/crave/resync.sh; fi
+repo sync -c --force-sync --force-remove-dirty --no-tags --no-clone-bundle -j$(nproc)
+
+# Legacy ncurses dependencies
+if [ ! -f /usr/lib/x86_64-linux-gnu/libncurses.so.5 ] || [ ! -f /usr/lib/x86_64-linux-gnu/libtinfo.so.5 ]; then
+    sudo apt-get update -qq 2>/dev/null || true
+    sudo apt-get install -y -qq wget curl 2>/dev/null || true
+    P="http://archive.ubuntu.com/ubuntu/pool/universe/n/ncurses"
+    T=$(curl -sL "$P/" | grep -oE 'libtinfo5_[^"<> ]+_amd64\.deb' | sort -V | tail -1)
+    N=$(curl -sL "$P/" | grep -oE 'libncurses5_[^"<> ]+_amd64\.deb' | sort -V | tail -1)
+    [ -n "$T" ] && [ -n "$N" ] && wget -q "$P/$T" -O /tmp/tinfo.deb && wget -q "$P/$N" -O /tmp/ncurses.deb && sudo apt-get install -y /tmp/tinfo.deb /tmp/ncurses.deb && rm -f /tmp/tinfo.deb /tmp/ncurses.deb || true
 fi
 
-echo "--> Synchronizing repositories with dirty protections..."
-repo sync -c --force-sync --force-remove-dirty --no-tags --no-clone-bundle -j$(nproc --all)
 
-# ========================================================
-# PHASE 4: FETCH NOKIA PL2 TREES (ZORO-15)
-# ========================================================
-echo "--> Cloning fresh Nokia 6.1 (PL2) trees from Zoro-15..."
-git clone --depth=1 -b lineage-17.1 https://github.com/Zoro-15/android_device_nokia_PL2.git device/nokia/PL2
-git clone --depth=1 -b lineage-17.1 https://github.com/Zoro-15/android_device_nokia_sdm660-common.git device/nokia/sdm660-common
-git clone --depth=1 -b lineage-17.1 https://github.com/Zoro-15/android_kernel_nokia_sdm660.git kernel/nokia/sdm660
-git clone --depth=1 -b lineage-17.1 https://github.com/Zoro-15/proprietary_vendor_nokia.git vendor/nokia
+# Verify required repos
+test -d device/nokia/PL2 && test -d device/nokia/sdm660-common && test -d kernel/nokia/sdm660 && test -d vendor/nokia
 
-# ========================================================
-# PHASE 5: CCACHE, LUNCH & COMPILATION
-# ========================================================
-CCACHE_BIN=""
-if command -v ccache &>/dev/null; then
-    CCACHE_BIN="$(command -v ccache)"
-elif [ -x "prebuilts/misc/linux-x86/ccache/ccache" ]; then
-    CCACHE_BIN="$(pwd)/prebuilts/misc/linux-x86/ccache/ccache"
+# ccache
+if [ -x prebuilts/misc/linux-x86/ccache/ccache ]; then
+    export USE_CCACHE=1 CCACHE_EXEC="$PWD/prebuilts/misc/linux-x86/ccache/ccache" CCACHE_DIR="$HOME/.ccache"
+    "$CCACHE_EXEC" -M 50G 2>/dev/null || true
 fi
 
-if [ -n "$CCACHE_BIN" ]; then
-    echo "--> Configuring CCACHE using $CCACHE_BIN..."
-    export USE_CCACHE=1
-    export CCACHE_EXEC="$CCACHE_BIN"
-    export CCACHE_DIR="${HOME}/.ccache"
-    "$CCACHE_BIN" -M 50G 2>/dev/null || true
-    "$CCACHE_BIN" -o compression=true 2>/dev/null || true
-else
-    echo "--> ccache binary not found in container or prebuilts; proceeding without ccache."
-    unset USE_CCACHE
-    unset CCACHE_EXEC
-fi
-
+# Build
+set +e
 source build/envsetup.sh
+set -e
+
 lunch qassa_PL2-userdebug
-
-echo "--> Cleaning stale intermediates (installclean)..."
 make installclean
-
 echo "--> Compiling keepQASSA 2.4 target image..."
 mka qassa -j$(nproc --all)
 
 # ========================================================
 # PHASE 6: ARTIFACT DISCOVERY, CHECKSUM & CLOUD UPLOAD
 # ========================================================
-OUT_ZIP=$(ls out/target/product/PL2/qassa_*.zip 2>/dev/null | head -n 1)
-if [ -z "$OUT_ZIP" ]; then
-    OUT_ZIP=$(ls out/target/product/PL2/*.zip 2>/dev/null | head -n 1)
-fi
 
-if [ -f "$OUT_ZIP" ]; then
-    echo "========================================================"
-    echo "BUILD SUCCEEDED: $OUT_ZIP"
-    echo "File Size: $(du -h "$OUT_ZIP" | cut -f1)"
-    echo "Uploading to BashUpload (Download link is logged below)..."
-    curl -s bashupload.com -T "$OUT_ZIP"
-    echo ""
-    echo "MD5 Checksum:"
-    if [ -f "${OUT_ZIP}.md5sum" ]; then
-        cat "${OUT_ZIP}.md5sum"
-    else
-        md5sum "$OUT_ZIP"
-    fi
-    echo "========================================================"
-fi
-
-END_TIME=$(date +%s)
-ELAPSED=$((END_TIME - START_TIME))
-echo "=== keepQASSA 2.4 Build Finished in $((ELAPSED / 60)) minutes! ==="
+curl -F "file=@qassa.zip" https://temp.sh/upload
