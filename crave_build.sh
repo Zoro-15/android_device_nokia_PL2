@@ -4,8 +4,9 @@ set -e -x
 # ========================================================
 # Nokia 6.1 (PL2 / TA-1089) keepQASSA 2.4 (Android 10 Q)
 # ========================================================
-WORKDIR="/crave-devspaces/qassa_build"
-mkdir -p "$WORKDIR" && cd "$WORKDIR"
+WORKDIR="${CRAVE_WORKDIR:-$PWD}"
+mkdir -p "$WORKDIR" 2>/dev/null || true
+cd "$WORKDIR"
 echo "=== Starting Nokia 6.1 (PL2) keepQASSA 2.4 (Android 10 Q) Build ==="
 
 # Repo Tool
@@ -16,9 +17,10 @@ fi
 # ========================================================
 # PHASE 1: EXECUTION, MEMORY & COMPILER GUARDS
 # ========================================================
-export GOMEMLIMIT=8GiB
+export GOMEMLIMIT=10GiB
 export GOGC=50
-export _JAVA_OPTIONS="-Xmx6g"
+export _JAVA_OPTIONS="-Xmx10g"
+export ALLOW_MISSING_DEPENDENCIES=true
 export SOONG_ALLOW_MISSING_DEPENDENCIES=true
 export WITHOUT_CHECK_API=true
 export SKIP_ABI_CHECKS=true
@@ -31,6 +33,10 @@ export BUILD_USERNAME=Zoro-15 BUILD_HOSTNAME=crave
 # ========================================================
 echo "--> Cleaning stale local manifests and device trees..."
 rm -rf .repo/local_manifests device/nokia/PL2 device/nokia/sdm660-common kernel/nokia/sdm660 vendor/nokia
+
+# Clean stale git hooks across repos to avoid sync divergence
+find .repo/projects/ -type d -name "hooks" -exec rm -rf {} + 2>/dev/null || true
+find .repo/project-objects/ -type d -name "hooks" -exec rm -rf {} + 2>/dev/null || true
 
 # Init ROM manifest + local manifest
 echo "--> Initializing keepQASSA 2.4 (Android 10 Q) manifest..."
@@ -50,7 +56,7 @@ XML
 
 # Crave resync + source sync
 if [ -f /usr/bin/resync ]; then /usr/bin/resync; else /opt/crave/resync.sh; fi
-repo sync -c --force-sync --force-remove-dirty --no-tags --no-clone-bundle -j$(nproc)
+repo sync -c --force-sync --force-remove-dirty --no-tags --no-clone-bundle --prune -j$(nproc)
 
 # Legacy ncurses dependencies for android 10
 if [ ! -f /usr/lib/x86_64-linux-gnu/libncurses.so.5 ] || [ ! -f /usr/lib/x86_64-linux-gnu/libtinfo.so.5 ]; then
