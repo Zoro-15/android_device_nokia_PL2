@@ -52,4 +52,7 @@
     <!-- Whether device supports Smart Pixels -->
     <bool name="config_enableSmartPixels">true</bool>
 
+    <!-- Direct Power Button Torch (Long-press power button when screen is off) -->
+    <bool name="config_supportLongPressPowerWhenNonInteractive">true</bool>
+
 </resources>
