@@ -87,6 +87,11 @@ set +e
 source build/envsetup.sh
 set -e
 
+# Clean cached kernel objects and boot images
+echo "--> Cleaning cached KERNEL_OBJ and boot image artifacts..."
+rm -rf out/target/product/PL2/obj/KERNEL_OBJ
+rm -rf out/target/product/PL2/boot.img out/target/product/PL2/recovery.img
+
 lunch lineage_PL2-userdebug
 make installclean
 echo "--> Compiling LineageOS 17.1 target image..."
