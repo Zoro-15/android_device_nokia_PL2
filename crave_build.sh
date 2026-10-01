@@ -77,13 +77,6 @@ fi
 # Verify required repos
 test -d device/nokia/PL2 && test -d device/nokia/sdm660-common && test -d kernel/nokia/sdm660 && test -d vendor/nokia
 
-# Hardware integrity check (TAS2557 SmartAmp DSP Firmware)
-FIRMWARE_TARGET="vendor/nokia/sdm660-common/proprietary/vendor/firmware/TAS2557MSSMono.bin"
-if [ ! -f "$FIRMWARE_TARGET" ] && [ -f "device/nokia/PL2/TAS2557MSSMono.bin" ]; then
-    mkdir -p "$(dirname "$FIRMWARE_TARGET")"
-    cp device/nokia/PL2/TAS2557MSSMono.bin "$FIRMWARE_TARGET"
-fi
-
 # ccache
 if [ -x prebuilts/misc/linux-x86/ccache/ccache ]; then
     export USE_CCACHE=1 CCACHE_EXEC="$PWD/prebuilts/misc/linux-x86/ccache/ccache" CCACHE_DIR="$HOME/.ccache"
