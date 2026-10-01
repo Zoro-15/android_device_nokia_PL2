@@ -38,14 +38,16 @@ PRODUCT_BRAND := Nokia
 PRODUCT_MODEL := Nokia 6.1
 PRODUCT_MANUFACTURER := HMD Global
 
+QASSA_BUILDTYPE := UNOFFICIAL
 QASSA_MAINTAINER := Zoro-15
 PRODUCT_PROPERTY_OVERRIDES += \
     ro.qassa.maintainer=Zoro-15 \
+    ro.lineage.maintainer=Zoro-15 \
     ro.build.maintainer=Zoro-15
 
 PRODUCT_BUILD_PROP_OVERRIDES += \
     PRODUCT_DEVICE=PL2_sprout \
-    PRODUCT_NAME="Plate2_00WW" \
+    PRODUCT_NAME=Plate2_00WW \
     PRIVATE_BUILD_DESC="Plate2_00WW-user 10 QKQ1.190828.002 00WW_4_15C release-keys"
 
 BUILD_FINGERPRINT := Nokia/Plate2_00WW/PL2_sprout:10/QKQ1.190828.002/00WW_4_15C:user/release-keys

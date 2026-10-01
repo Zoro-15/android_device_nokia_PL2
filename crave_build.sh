@@ -95,6 +95,11 @@ set +e
 source build/envsetup.sh
 set -e
 
+# Clean cached kernel objects and boot images
+echo "--> Cleaning cached KERNEL_OBJ and boot image artifacts..."
+rm -rf out/target/product/PL2/obj/KERNEL_OBJ
+rm -rf out/target/product/PL2/boot.img out/target/product/PL2/recovery.img
+
 lunch qassa_PL2-userdebug
 make installclean
 echo "--> Compiling keepQASSA 2.4 target image..."
