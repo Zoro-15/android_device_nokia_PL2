@@ -102,7 +102,10 @@ fi
 echo "--> [5/8] Applying Android 16 BSP compatibility shims..."
 
 # Fix 1: Soong Namespace & File-Copy Bridge (msm8998 <-> sdm660)
-mkdir -p hardware/qcom-caf
+mkdir -p hardware/qcom-caf/sdm660
+if [ ! -f "hardware/qcom-caf/sdm660/Android.bp" ]; then
+    echo "soong_namespace {}" > hardware/qcom-caf/sdm660/Android.bp
+fi
 rm -rf hardware/qcom-caf/msm8998
 ln -sfn $(pwd)/hardware/qcom-caf/sdm660 $(pwd)/hardware/qcom-caf/msm8998
 echo "    [OK] Linked hardware/qcom-caf/msm8998 -> sdm660"

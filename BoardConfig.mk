@@ -34,16 +34,13 @@ TARGET_BOOTLOADER_BOARD_NAME := sdm630
 TARGET_SCREEN_DENSITY := 420
 
 # Kernel (Override common to point to verified kernel defconfig)
-TARGET_KERNEL_CONFIG := vendor/sdm660-perf_defconfig
+TARGET_KERNEL_CONFIG := vendor/sdm660-perf_defconfig vendor/nokia/nokia.config
 TARGET_KERNEL_CLANG_COMPILE := true
 TARGET_KERNEL_ADDITIONAL_FLAGS := \
     LLVM_IAS=0 \
     KCFLAGS="-gdwarf-4" \
     KAFLAGS="-gdwarf-4" \
     CLANG_TRIPLE=aarch64-linux-gnu-
-
-# VINTF Priority
-PRODUCT_TARGET_VINTF_ORDER := device framework
 
 # SELinux (Permissive for initial bringup validation)
 BOARD_KERNEL_CMDLINE += androidboot.selinux=permissive
