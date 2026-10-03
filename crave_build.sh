@@ -108,7 +108,7 @@ echo "    [OK] Stripped obsolete BOARD_VNDK_VERSION"
 mkdir -p vendor/nokia/PL2/proprietary/vendor/firmware
 if [ ! -f "vendor/nokia/PL2/proprietary/vendor/firmware/TAS2557MSSMono.bin" ]; then
     echo "    [FETCH] Downloading TAS2557MSSMono.bin DSP firmware..."
-    curl -sL "https://raw.githubusercontent.com/Zoro-15/proprietary_vendor_nokia_PL2/lineage-22.2/proprietary/vendor/firmware/TAS2557MSSMono.bin" \
+    curl -sL "https://raw.githubusercontent.com/Zoro-15/proprietary_vendor_nokia_PL2/lineage-23.2/proprietary/vendor/firmware/TAS2557MSSMono.bin" \
         -o vendor/nokia/PL2/proprietary/vendor/firmware/TAS2557MSSMono.bin
 fi
 if ! grep -q "TAS2557MSSMono.bin" vendor/nokia/PL2/PL2-vendor.mk 2>/dev/null; then
@@ -120,6 +120,12 @@ echo "    [OK] TAS2557 SmartAmp DSP firmware deployed"
 # Fix 4: Relax Clang 18/19 Werror aborts on legacy display HAL
 sed -i "s/-Werror//g" hardware/qcom-caf/sdm660/display/Android.bp 2>/dev/null || true
 echo "    [OK] Relaxed display HAL -Werror flags"
+
+# Fix 5: Ensure kernel config directory and fallback placeholders exist
+mkdir -p kernel/nokia/sdm660/arch/arm64/configs/vendor/nokia
+touch kernel/nokia/sdm660/arch/arm64/configs/vendor/nokia/nokia.config
+touch kernel/nokia/sdm660/arch/arm64/configs/vendor/nokia/PL2.config
+echo "    [OK] Kernel config fragments safeguarded"
 
 # ------------------------------------------------------------------------------
 # PHASE 6: CCACHE CONFIGURATION

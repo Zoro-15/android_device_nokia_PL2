@@ -33,8 +33,11 @@ TARGET_BOOTLOADER_BOARD_NAME := sdm630
 # Display
 TARGET_SCREEN_DENSITY := 420
 
-# Kernel
-TARGET_KERNEL_CONFIG += vendor/nokia/PL2.config
+# Kernel (Override common to point to verified kernel defconfig)
+TARGET_KERNEL_CONFIG := vendor/sdm660-perf_defconfig
+
+# SELinux (Permissive for initial bringup validation)
+BOARD_KERNEL_CMDLINE += androidboot.selinux=permissive
 
 # Partitions
 BOARD_SYSTEMIMAGE_PARTITION_SIZE := 3221225472
