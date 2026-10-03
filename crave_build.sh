@@ -54,11 +54,11 @@ cat << "EOF" > .repo/local_manifests/PL2.xml
   <remove-project name="LineageOS/android_hardware_lineage_compat" />
 
   <!-- Device Trees -->
-  <project path="device/nokia/sdm660-common" name="log1cs/android_device_nokia_sdm660-common" remote="github" revision="lineage-23.2" />
+  <project path="device/nokia/sdm660-common" name="Zoro-15/android_device_nokia_sdm660-common" remote="github" revision="lineage-23.2" />
   <project path="device/nokia/PL2" name="Zoro-15/android_device_nokia_PL2" remote="github" revision="lineage-23.2" />
 
   <!-- Vendor Trees -->
-  <project path="vendor/nokia/sdm660-common" name="log1cs/proprietary_vendor_nokia_sdm660-common" remote="github" revision="lineage-23.2" />
+  <project path="vendor/nokia/sdm660-common" name="Zoro-15/proprietary_vendor_nokia_sdm660-common" remote="github" revision="lineage-23.2" />
   <project path="vendor/nokia/PL2" name="Zoro-15/proprietary_vendor_nokia_PL2" remote="github" revision="lineage-23.2" />
 
   <!-- Kernel Tree (eBPF 5.10 Backport) -->
@@ -85,9 +85,9 @@ else
 fi
 
 # Fallback check: Ensure all 10 repositories exist
-[ ! -d "device/nokia/sdm660-common" ] && git clone --depth=1 -b lineage-23.2 https://github.com/log1cs/android_device_nokia_sdm660-common.git device/nokia/sdm660-common
+[ ! -d "device/nokia/sdm660-common" ] && git clone --depth=1 -b lineage-23.2 https://github.com/Zoro-15/android_device_nokia_sdm660-common.git device/nokia/sdm660-common
 [ ! -d "device/nokia/PL2" ] && git clone --depth=1 -b lineage-23.2 https://github.com/Zoro-15/android_device_nokia_PL2.git device/nokia/PL2
-[ ! -d "vendor/nokia/sdm660-common" ] && git clone --depth=1 -b lineage-23.2 https://github.com/log1cs/proprietary_vendor_nokia_sdm660-common.git vendor/nokia/sdm660-common
+[ ! -d "vendor/nokia/sdm660-common" ] && git clone --depth=1 -b lineage-23.2 https://github.com/Zoro-15/proprietary_vendor_nokia_sdm660-common.git vendor/nokia/sdm660-common
 [ ! -d "vendor/nokia/PL2" ] && git clone --depth=1 -b lineage-23.2 https://github.com/Zoro-15/proprietary_vendor_nokia_PL2.git vendor/nokia/PL2
 [ ! -d "kernel/nokia/sdm660" ] && git clone --depth=1 -b lineage-23.2 https://github.com/Zoro-15/android_kernel_nokia_PL2_16.git kernel/nokia/sdm660
 [ ! -d "hardware/qcom-caf/sdm660/audio" ] && git clone --depth=1 -b lineage-23.2 https://github.com/Zoro-15/android_hardware_qcom_audio.git hardware/qcom-caf/sdm660/audio
