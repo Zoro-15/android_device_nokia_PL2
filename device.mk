@@ -71,5 +71,15 @@ PRODUCT_COPY_FILES += \
 PRODUCT_COPY_FILES += \
     $(LOCAL_PATH)/configs/powerhint.json:$(TARGET_COPY_OUT_VENDOR)/etc/powerhint.json
 
+# Soong Namespaces
+PRODUCT_SOONG_NAMESPACES += \
+    hardware/qcom-caf/sdm660 \
+    hardware/qcom-caf/sdm660/audio \
+    hardware/qcom-caf/sdm660/display \
+    hardware/qcom-caf/sdm660/media \
+    hardware/lineage/compat \
+    vendor/nokia/sdm660-common \
+    vendor/nokia/PL2
+
 # Inherit from nokia sdm660-common
 $(call inherit-product, device/nokia/sdm660-common/common.mk)

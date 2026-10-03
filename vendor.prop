@@ -1,6 +1,6 @@
 # Audio
 persist.audio.fluence.voicecomm=true
-ro.hardware.audio.primary=sdm660-nokia
+ro.hardware.audio.primary=sdm660
 
 # Bluetooth
 bluetooth.device.default_name=Nokia 6.1

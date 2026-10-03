@@ -23,7 +23,6 @@ export _JAVA_OPTIONS="-Xmx8g"
 export SOONG_ALLOW_MISSING_DEPENDENCIES=true
 export WITHOUT_CHECK_API=true
 export SKIP_ABI_CHECKS=true
-export SOONG_UI_TABLET=always
 
 # ------------------------------------------------------------------------------
 # PHASE 2: PRE-FLIGHT CLEANUP (CRAVE SAFE - NEVER TOUCH PREBUILTS OR SOONG CACHE)
@@ -37,24 +36,23 @@ rm -rf hardware/qcom-caf/sdm660 hardware/qcom-caf/msm8998
 rm -rf device/qcom/sepolicy-legacy-um hardware/lineage/compat
 
 # ------------------------------------------------------------------------------
-# PHASE 3: ROM MANIFEST INITIALIZATION & RESYNC
+# PHASE 3: ROM MANIFEST INITIALIZATION & LOCAL MANIFEST DEPLOYMENT
 # ------------------------------------------------------------------------------
 echo "--> [3/8] Initializing LineageOS 23.2 base manifest..."
 repo init -u https://github.com/LineageOS/android.git -b lineage-23.2 --git-lfs --depth=1
 
-if [ -f "/opt/crave/resync.sh" ]; then
-    echo "--> Running Crave accelerated resync mirror..."
-    /opt/crave/resync.sh
-fi
-
-# ------------------------------------------------------------------------------
-# PHASE 4: DEPLOYING NOKIA 6.1 (PL2) LOCAL MANIFEST & SYNCING
-# ------------------------------------------------------------------------------
-echo "--> [4/8] Deploying 10-repository local manifest for PL2..."
+echo "--> Deploying 10-repository local manifest for PL2 (with upstream project removals)..."
 mkdir -p .repo/local_manifests
 cat << "EOF" > .repo/local_manifests/PL2.xml
 <?xml version="1.0" encoding="UTF-8"?>
 <manifest>
+  <!-- Remove Upstream Base Projects Before Overriding Paths -->
+  <remove-project name="LineageOS/android_hardware_qcom_audio" />
+  <remove-project name="LineageOS/android_hardware_qcom_display" />
+  <remove-project name="LineageOS/android_hardware_qcom_media" />
+  <remove-project name="LineageOS/android_device_qcom_sepolicy" />
+  <remove-project name="LineageOS/android_hardware_lineage_compat" />
+
   <!-- Device Trees -->
   <project path="device/nokia/sdm660-common" name="log1cs/android_device_nokia_sdm660-common" remote="github" revision="lineage-23.2" />
   <project path="device/nokia/PL2" name="Zoro-15/android_device_nokia_PL2" remote="github" revision="lineage-23.2" />
@@ -75,8 +73,16 @@ cat << "EOF" > .repo/local_manifests/PL2.xml
 </manifest>
 EOF
 
-echo "--> Syncing source repositories..."
-repo sync -c -j$(nproc --all) --force-sync --no-clone-bundle --no-tags --force-remove-dirty
+# ------------------------------------------------------------------------------
+# PHASE 4: REPOSITORY SYNC (ACCELERATED MIRROR / FAILOVER)
+# ------------------------------------------------------------------------------
+echo "--> [4/8] Syncing source repositories..."
+if [ -f "/opt/crave/resync.sh" ]; then
+    echo "--> Running Crave accelerated resync mirror..."
+    /opt/crave/resync.sh
+else
+    repo sync -c -j$(nproc --all) --force-sync --no-clone-bundle --no-tags --force-remove-dirty
+fi
 
 # Fallback check: Ensure all 10 repositories exist
 [ ! -d "device/nokia/sdm660-common" ] && git clone --depth=1 -b lineage-23.2 https://github.com/log1cs/android_device_nokia_sdm660-common.git device/nokia/sdm660-common
@@ -97,6 +103,7 @@ echo "--> [5/8] Applying Android 16 BSP compatibility shims..."
 
 # Fix 1: Soong Namespace & File-Copy Bridge (msm8998 <-> sdm660)
 mkdir -p hardware/qcom-caf
+rm -rf hardware/qcom-caf/msm8998
 ln -sfn $(pwd)/hardware/qcom-caf/sdm660 $(pwd)/hardware/qcom-caf/msm8998
 echo "    [OK] Linked hardware/qcom-caf/msm8998 -> sdm660"
 
@@ -126,6 +133,39 @@ mkdir -p kernel/nokia/sdm660/arch/arm64/configs/vendor/nokia
 touch kernel/nokia/sdm660/arch/arm64/configs/vendor/nokia/nokia.config
 touch kernel/nokia/sdm660/arch/arm64/configs/vendor/nokia/PL2.config
 echo "    [OK] Kernel config fragments safeguarded"
+
+# Fix 6: Strip obsolete otapreopt_script and fstab.qcom.ramdisk from sdm660-common
+sed -i "/otapreopt_script/d" device/nokia/sdm660-common/common.mk 2>/dev/null || true
+sed -i "/fstab.qcom.ramdisk/d" device/nokia/sdm660-common/common.mk 2>/dev/null || true
+echo "    [OK] Stripped otapreopt_script and fstab.qcom.ramdisk"
+
+# Fix 7: Eliminate SEPolicy neverallow violations and obsolete types
+sed -i "/fingerprintd_data_file/d" device/nokia/sdm660-common/sepolicy/vendor/vendor_init.te 2>/dev/null || true
+sed -i "/system_data_file/d" device/nokia/sdm660-common/sepolicy/vendor/vendor_init.te 2>/dev/null || true
+rm -f device/nokia/sdm660-common/sepolicy/vendor/isolated_app.te
+sed -i "s/exported_default_prop/vendor_default_prop/g" device/nokia/sdm660-common/sepolicy/vendor/property_contexts 2>/dev/null || true
+sed -i "/\/data\/system\/fingerprint/d" device/nokia/sdm660-common/sepolicy/vendor/file_contexts 2>/dev/null || true
+echo "    [OK] Cleaned vendor SEPolicy neverallows"
+
+# Fix 8: Modernize /data fstab encryption and strip unsupported fsverity
+sed -i "s/fileencryption=ice/fileencryption=aes-256-xts:aes-256-cts:v1/g" device/nokia/sdm660-common/rootdir/etc/fstab.qcom 2>/dev/null || true
+sed -i "s/,fsverity//g" device/nokia/sdm660-common/rootdir/etc/fstab.qcom 2>/dev/null || true
+echo "    [OK] Modernized /data fstab flags"
+
+# Fix 9: Add android:exported="true" to QuickSettings Tile services if parts exists
+if [ -f "device/nokia/sdm660-common/parts/AndroidManifest.xml" ]; then
+    sed -i '/android:permission="android.permission.BIND_QUICK_SETTINGS_TILE"/i \            android:exported="true"' device/nokia/sdm660-common/parts/AndroidManifest.xml 2>/dev/null || true
+    echo "    [OK] Exported QuickSettings Tile services in DeviceParts"
+fi
+
+# Fix 10: Disambiguate prebuilt camera.sdm660 to prevent duplicate Soong module error
+sed -i 's/"camera.sdm660"/"camera.sdm660-prebuilt"/g' vendor/nokia/PL2/Android.bp 2>/dev/null || true
+echo "    [OK] Disambiguated prebuilt camera.sdm660"
+
+# Fix 11: Ensure SEPOLICY_PATH resolves dynamically in sepolicy-legacy-um
+sed -i 's|SEPOLICY_PATH:= device/qcom/sepolicy|SEPOLICY_PATH := $(call my-dir)|g' device/qcom/sepolicy-legacy-um/SEPolicy.mk 2>/dev/null || true
+echo "    [OK] Validated SEPOLICY_PATH dynamic resolution"
+
 
 # ------------------------------------------------------------------------------
 # PHASE 6: CCACHE CONFIGURATION
