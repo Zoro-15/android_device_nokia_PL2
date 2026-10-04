@@ -5,6 +5,7 @@
 # Hosted in Zoro-15/android_device_nokia_PL2 (branch: lineage-23.2)
 # ==============================================================================
 set -e
+set -o pipefail
 
 START_TIME=$(date +%s)
 echo "========================================================================"
@@ -101,14 +102,19 @@ fi
 # ------------------------------------------------------------------------------
 echo "--> [5/8] Applying Android 16 BSP compatibility shims..."
 
-# Fix 1: Soong Namespace & File-Copy Bridge (msm8998 <-> sdm660)
+# Fix 1: Soong Namespace & HAL Path Compatibility (sdm660 & msm8998 fallback)
 mkdir -p hardware/qcom-caf/sdm660
 if [ ! -f "hardware/qcom-caf/sdm660/Android.bp" ]; then
     echo "soong_namespace {}" > hardware/qcom-caf/sdm660/Android.bp
 fi
+# Patch sdm660-common Android.bp in case remote repo has stale msm8998 import
+sed -i 's|"hardware/qcom-caf/msm8998"|"hardware/qcom-caf/sdm660"|g' device/nokia/sdm660-common/Android.bp 2>/dev/null || true
+
+# Provide actual directory with soong_namespace for msm8998 (Soong skips symlinks)
 rm -rf hardware/qcom-caf/msm8998
-ln -sfn $(pwd)/hardware/qcom-caf/sdm660 $(pwd)/hardware/qcom-caf/msm8998
-echo "    [OK] Linked hardware/qcom-caf/msm8998 -> sdm660"
+mkdir -p hardware/qcom-caf/msm8998
+echo "soong_namespace {}" > hardware/qcom-caf/msm8998/Android.bp
+echo "    [OK] Prepared hardware/qcom-caf/sdm660 and hardware/qcom-caf/msm8998 namespaces"
 
 # Fix 2: Remove deprecated VNDK definition from BoardConfigCommon
 sed -i "/BOARD_VNDK_VERSION/d" device/nokia/sdm660-common/BoardConfigCommon.mk 2>/dev/null || true
@@ -217,7 +223,8 @@ echo "--> Cleaning stale intermediate build artifacts (installclean)..."
 make installclean
 
 echo "--> Launching parallel compilation..."
-mka bacon -j$(nproc --all) 2>&1 | tee build_a16_PL2.log
+BUILD_FAILED=0
+mka bacon -j$(nproc --all) 2>&1 | tee build_a16_PL2.log || BUILD_FAILED=1
 
 # ------------------------------------------------------------------------------
 # PHASE 8: ARTIFACT RETRIEVAL & CLOUD EXPORT
@@ -225,7 +232,7 @@ mka bacon -j$(nproc --all) 2>&1 | tee build_a16_PL2.log
 echo "--> [8/8] Verifying build artifacts..."
 OUT_ZIP=$(ls out/target/product/PL2/lineage-23.2-*-UNOFFICIAL-PL2.zip 2>/dev/null | head -n 1)
 
-if [ -f "$OUT_ZIP" ]; then
+if [ -f "$OUT_ZIP" ] && [ "$BUILD_FAILED" -eq 0 ]; then
     echo "========================================================================"
     echo " COMPILATION SUCCEEDED!"
     echo " Output ROM: $OUT_ZIP"
@@ -242,9 +249,10 @@ if [ -f "$OUT_ZIP" ]; then
     fi
 else
     echo "========================================================================"
-    echo " BUILD COMPLETED (Checking output files in out/target/product/PL2/):"
-    ls -lh out/target/product/PL2/*.zip 2>/dev/null || echo "No zip produced yet. Check build_a16_PL2.log for errors."
+    echo " BUILD FAILED (Checking output files in out/target/product/PL2/):"
+    ls -lh out/target/product/PL2/*.zip 2>/dev/null || echo "No zip produced. Check build_a16_PL2.log for errors."
     echo "========================================================================"
+    exit 1
 fi
 
 END_TIME=$(date +%s)
