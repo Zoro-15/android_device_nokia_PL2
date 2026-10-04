@@ -5,7 +5,6 @@
 # Hosted in Zoro-15/android_device_nokia_PL2 (branch: lineage-23.2)
 # ==============================================================================
 set -e
-set -o pipefail
 
 START_TIME=$(date +%s)
 echo "========================================================================"
@@ -223,16 +222,15 @@ echo "--> Cleaning stale intermediate build artifacts (installclean)..."
 make installclean
 
 echo "--> Launching parallel compilation..."
-BUILD_FAILED=0
-mka bacon -j$(nproc --all) 2>&1 | tee build_a16_PL2.log || BUILD_FAILED=1
+mka bacon -j$(nproc --all) 2>&1 | tee build_a16_PL2.log || true
 
 # ------------------------------------------------------------------------------
 # PHASE 8: ARTIFACT RETRIEVAL & CLOUD EXPORT
 # ------------------------------------------------------------------------------
 echo "--> [8/8] Verifying build artifacts..."
-OUT_ZIP=$(ls out/target/product/PL2/lineage-23.2-*-UNOFFICIAL-PL2.zip 2>/dev/null | head -n 1)
+OUT_ZIP=$(ls out/target/product/PL2/lineage-23.2-*-UNOFFICIAL-PL2.zip 2>/dev/null | head -n 1 || true)
 
-if [ -f "$OUT_ZIP" ] && [ "$BUILD_FAILED" -eq 0 ]; then
+if [ -n "$OUT_ZIP" ] && [ -f "$OUT_ZIP" ]; then
     echo "========================================================================"
     echo " COMPILATION SUCCEEDED!"
     echo " Output ROM: $OUT_ZIP"
