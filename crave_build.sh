@@ -170,9 +170,13 @@ fi
 sed -i 's/"camera.sdm660"/"camera.sdm660-prebuilt"/g' vendor/nokia/PL2/Android.bp 2>/dev/null || true
 echo "    [OK] Disambiguated prebuilt camera.sdm660"
 
-# Fix 11: Ensure SEPOLICY_PATH resolves dynamically in sepolicy-legacy-um
-sed -i 's|SEPOLICY_PATH:= device/qcom/sepolicy|SEPOLICY_PATH := $(call my-dir)|g' device/qcom/sepolicy-legacy-um/SEPolicy.mk 2>/dev/null || true
-echo "    [OK] Validated SEPOLICY_PATH dynamic resolution"
+# Fix 11: Ensure SEPOLICY_PATH resolves to device/qcom/sepolicy-legacy-um (never use undefined $(call my-dir) in BoardConfig)
+sed -i 's|SEPOLICY_PATH:= device/qcom/sepolicy|SEPOLICY_PATH := device/qcom/sepolicy-legacy-um|g' device/qcom/sepolicy-legacy-um/SEPolicy.mk 2>/dev/null || true
+sed -i 's|SEPOLICY_PATH := \$(call my-dir)|SEPOLICY_PATH := device/qcom/sepolicy-legacy-um|g' device/qcom/sepolicy-legacy-um/SEPolicy.mk 2>/dev/null || true
+sed -i 's|SEPOLICY_PATH := \$(LOCAL_PATH)|SEPOLICY_PATH := device/qcom/sepolicy-legacy-um|g' device/qcom/sepolicy-legacy-um/SEPolicy.mk 2>/dev/null || true
+sed -i 's|LOCAL_PATH := \$(call my-dir)|LOCAL_PATH := device/qcom/sepolicy-legacy-um|g' device/qcom/sepolicy-legacy-um/SEPolicy.mk 2>/dev/null || true
+sed -i 's|\$(SEPOLICY_PATH)/generic|device/qcom/sepolicy-legacy-um/generic|g' device/qcom/sepolicy-legacy-um/SEPolicy.mk 2>/dev/null || true
+echo "    [OK] Validated SEPOLICY_PATH resolution in sepolicy-legacy-um"
 
 
 # ------------------------------------------------------------------------------
