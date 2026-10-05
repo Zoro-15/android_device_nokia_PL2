@@ -108,6 +108,8 @@ if [ ! -f "hardware/qcom-caf/sdm660/Android.bp" ]; then
 fi
 # Patch sdm660-common Android.bp in case remote repo has stale msm8998 import
 sed -i 's|"hardware/qcom-caf/msm8998"|"hardware/qcom-caf/sdm660"|g' device/nokia/sdm660-common/Android.bp 2>/dev/null || true
+sed -i 's|"hardware/qcom-caf/msm8998/audio|"hardware/qcom-caf/sdm660/audio|g' device/nokia/sdm660-common/audio_amplifier/Android.bp 2>/dev/null || true
+sed -i 's|hardware/qcom-caf/msm8998/audio/configs/sdm660/audio_effects.xml|\$(LOCAL_PATH)/configs/audio/audio_effects.xml|g' device/nokia/sdm660-common/common.mk 2>/dev/null || true
 
 # Provide actual directory with soong_namespace for msm8998 (Soong skips symlinks)
 rm -rf hardware/qcom-caf/msm8998
@@ -171,11 +173,12 @@ sed -i 's/"camera.sdm660"/"camera.sdm660-prebuilt"/g' vendor/nokia/PL2/Android.b
 echo "    [OK] Disambiguated prebuilt camera.sdm660"
 
 # Fix 11: Ensure SEPOLICY_PATH resolves to device/qcom/sepolicy-legacy-um (never use undefined $(call my-dir) in BoardConfig)
-sed -i 's|SEPOLICY_PATH:= device/qcom/sepolicy|SEPOLICY_PATH := device/qcom/sepolicy-legacy-um|g' device/qcom/sepolicy-legacy-um/SEPolicy.mk 2>/dev/null || true
-sed -i 's|SEPOLICY_PATH := \$(call my-dir)|SEPOLICY_PATH := device/qcom/sepolicy-legacy-um|g' device/qcom/sepolicy-legacy-um/SEPolicy.mk 2>/dev/null || true
-sed -i 's|SEPOLICY_PATH := \$(LOCAL_PATH)|SEPOLICY_PATH := device/qcom/sepolicy-legacy-um|g' device/qcom/sepolicy-legacy-um/SEPolicy.mk 2>/dev/null || true
-sed -i 's|LOCAL_PATH := \$(call my-dir)|LOCAL_PATH := device/qcom/sepolicy-legacy-um|g' device/qcom/sepolicy-legacy-um/SEPolicy.mk 2>/dev/null || true
+sed -i -E 's|^SEPOLICY_PATH[[:space:]]*:?=.*|SEPOLICY_PATH := device/qcom/sepolicy-legacy-um|' device/qcom/sepolicy-legacy-um/SEPolicy.mk 2>/dev/null || true
+sed -i -E 's|^LOCAL_PATH[[:space:]]*:?=.*|LOCAL_PATH := device/qcom/sepolicy-legacy-um|' device/qcom/sepolicy-legacy-um/SEPolicy.mk 2>/dev/null || true
+sed -i 's|\$(call my-dir)|device/qcom/sepolicy-legacy-um|g' device/qcom/sepolicy-legacy-um/SEPolicy.mk 2>/dev/null || true
 sed -i 's|\$(SEPOLICY_PATH)/generic|device/qcom/sepolicy-legacy-um/generic|g' device/qcom/sepolicy-legacy-um/SEPolicy.mk 2>/dev/null || true
+echo "    [VERIFY] SEPOLICY_PATH in SEPolicy.mk:"
+grep -n '^SEPOLICY_PATH' device/qcom/sepolicy-legacy-um/SEPolicy.mk || true
 echo "    [OK] Validated SEPOLICY_PATH resolution in sepolicy-legacy-um"
 
 
@@ -222,11 +225,22 @@ else
     exit 0
 fi
 
-echo "--> Cleaning stale intermediate build artifacts (installclean)..."
+echo "--> [CLEAN] Running make installclean (cleans target package artifacts only)..."
 make installclean
+echo "--> [CLEAN] installclean completed."
+
+# Verify Soong analysis / ninja generation prior to full compile
+echo "--> [VERIFY] Running Soong analysis check (m nothing)..."
+m nothing -j$(nproc --all)
 
 echo "--> Launching parallel compilation..."
-mka bacon -j$(nproc --all) 2>&1 | tee build_a16_PL2.log || true
+mka bacon -j$(nproc --all) 2>&1 | tee build_a16_PL2.log
+BUILD_STATUS=${PIPESTATUS[0]}
+if [ $BUILD_STATUS -ne 0 ]; then
+    echo "========================================================================"
+    echo " [FATAL] mka bacon failed with exit code $BUILD_STATUS"
+    echo "========================================================================"
+fi
 
 # ------------------------------------------------------------------------------
 # PHASE 8: ARTIFACT RETRIEVAL & CLOUD EXPORT
