@@ -21,7 +21,6 @@ export GOMEMLIMIT=12GiB
 export GOGC=50
 export _JAVA_OPTIONS="-Xmx8g"
 export SOONG_ALLOW_MISSING_DEPENDENCIES=true
-export WITHOUT_CHECK_API=true
 export SKIP_ABI_CHECKS=true
 
 # ------------------------------------------------------------------------------
