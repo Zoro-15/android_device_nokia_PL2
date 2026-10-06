@@ -21,13 +21,14 @@ export GOMEMLIMIT=12GiB
 export GOGC=50
 export _JAVA_OPTIONS="-Xmx8g"
 export SOONG_ALLOW_MISSING_DEPENDENCIES=true
-export SKIP_ABI_CHECKS=true
 
 # CRITICAL FOR ANDROID 16:
-# Crave baseline containers export legacy Android 10 WITHOUT_CHECK_API=true.
-# In Android 14+, WITHOUT_CHECK_API=true breaks Soong stub generation (libcore/openjdk_java_files.bp).
+# Never export SKIP_ABI_CHECKS=true or WITHOUT_CHECK_API=true.
+# In AOSP/LineageOS makefiles, SKIP_ABI_CHECKS=true re-derives WITHOUT_CHECK_API=true,
+# which breaks Soong stub generation from signature files (libcore/openjdk_java_files.bp).
 unset WITHOUT_CHECK_API
 export WITHOUT_CHECK_API=false
+unset SKIP_ABI_CHECKS
 
 # ------------------------------------------------------------------------------
 # PHASE 2: PRE-FLIGHT CLEANUP (CRAVE SAFE - NEVER TOUCH PREBUILTS OR SOONG CACHE)
@@ -37,7 +38,7 @@ rm -rf .repo/local_manifests/
 rm -rf device/nokia/PL2 device/nokia/sdm660-common
 rm -rf vendor/nokia/PL2 vendor/nokia/sdm660-common
 rm -rf kernel/nokia/sdm660
-rm -rf hardware/qcom-caf/sdm660
+rm -rf hardware/qcom-caf/sdm660 hardware/qcom-caf/msm8998
 rm -rf device/qcom/sepolicy-legacy-um hardware/lineage/compat
 
 # ------------------------------------------------------------------------------
@@ -82,12 +83,15 @@ EOF
 # PHASE 4: REPOSITORY SYNC (ACCELERATED MIRROR / FAILOVER)
 # ------------------------------------------------------------------------------
 echo "--> [4/7] Syncing source repositories..."
+# Disable set -e temporarily so failure-tolerant fallbacks can execute if sync returns non-zero
+set +e
 if [ -f "/opt/crave/resync.sh" ]; then
     echo "--> Running Crave accelerated resync mirror..."
     /opt/crave/resync.sh
 else
     repo sync -c -j$(nproc --all) --force-sync --no-clone-bundle --no-tags --force-remove-dirty
 fi
+set -e
 
 # Fallback check: Ensure all 10 repositories exist
 [ ! -d "device/nokia/sdm660-common" ] && git clone --depth=1 -b lineage-23.2 https://github.com/Zoro-15/android_device_nokia_sdm660-common.git device/nokia/sdm660-common
@@ -102,12 +106,17 @@ fi
 [ ! -d "hardware/lineage/compat" ] && git clone --depth=1 -b lineage-23.2 https://github.com/log1cs/android_hardware_lineage_compat.git hardware/lineage/compat
 
 # ------------------------------------------------------------------------------
-# PHASE 5: SOONG NAMESPACE REGISTRATION
+# PHASE 5: SOONG NAMESPACE REGISTRATION (SDM660 & MSM8998 SAFEGUARDS)
 # ------------------------------------------------------------------------------
-echo "--> [5/7] Ensuring Soong namespace root for hardware/qcom-caf/sdm660..."
+echo "--> [5/7] Ensuring Soong namespace roots..."
 mkdir -p hardware/qcom-caf/sdm660
 if [ ! -f "hardware/qcom-caf/sdm660/Android.bp" ]; then
     echo "soong_namespace {}" > hardware/qcom-caf/sdm660/Android.bp
+fi
+
+mkdir -p hardware/qcom-caf/msm8998
+if [ ! -f "hardware/qcom-caf/msm8998/Android.bp" ]; then
+    echo "soong_namespace {}" > hardware/qcom-caf/msm8998/Android.bp
 fi
 
 # ------------------------------------------------------------------------------
@@ -141,20 +150,19 @@ if lunch lineage_PL2-ap4a-userdebug 2>/dev/null; then
     echo "    [OK] Target selected: lineage_PL2-ap4a-userdebug"
 elif lunch lineage_PL2-bp1a-userdebug 2>/dev/null; then
     echo "    [OK] Target selected: lineage_PL2-bp1a-userdebug"
-elif lunch lineage_PL2-userdebug 2>/dev/null; then
+elif lunch lineage_PL2-userdebug; then
     echo "    [OK] Target selected: lineage_PL2-userdebug"
 else
-    echo "    [FALLBACK] Using brunch PL2..."
-    brunch PL2
-    exit 0
+    echo "    [ERROR] lunch failed to select target lineage_PL2."
+    exit 1
 fi
-
-echo "--> [CLEAN] Running make installclean..."
-make installclean
 
 # Verify Soong analysis / ninja generation prior to full compile
 echo "--> [VERIFY] Running Soong analysis check (m nothing)..."
 m nothing -j$(nproc --all)
+
+echo "--> [CLEAN] Running make installclean..."
+make installclean
 
 # ------------------------------------------------------------------------------
 # PHASE 7: COMPILATION & ARTIFACT EXPORT
@@ -179,11 +187,11 @@ if [ -n "$OUT_ZIP" ] && [ -f "$OUT_ZIP" ]; then
     echo " MD5:        $(md5sum "$OUT_ZIP")"
     echo "========================================================================"
     echo "Uploading to BashUpload for instant high-speed download..."
-    curl -s bashupload.com -T "$OUT_ZIP" || true
+    curl -fL --retry 3 https://bashupload.com/ -T "$OUT_ZIP" || echo "ROM zip upload failed"
     echo ""
     if [ -f "out/target/product/PL2/boot.img" ]; then
         echo "Uploading boot.img (Fastboot Recovery)..."
-        curl -s bashupload.com -T "out/target/product/PL2/boot.img" || true
+        curl -fL --retry 3 https://bashupload.com/ -T "out/target/product/PL2/boot.img" || echo "boot.img upload failed"
         echo ""
     fi
 else
