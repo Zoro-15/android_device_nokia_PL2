@@ -81,5 +81,9 @@ PRODUCT_SOONG_NAMESPACES += \
     vendor/nokia/sdm660-common \
     vendor/nokia/PL2
 
+# CrashRecovery
+PRODUCT_APEX_SYSTEM_SERVER_JARS += \
+    com.android.crashrecovery:service-crashrecovery
+
 # Inherit from nokia sdm660-common
 $(call inherit-product, device/nokia/sdm660-common/common.mk)
