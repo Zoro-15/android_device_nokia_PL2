@@ -116,9 +116,9 @@ rm -rf out/soong/system_server_dexjars out/soong/.ninja_deps out/soong/.ninja_lo
 echo "--> Verifying Soong analysis..."
 m nothing -j$(nproc --all)
 
-# Compilation (keep-going mode to discover all errors in a single build)
-echo "--> Compiling LineageOS 23.2 (keep-going mode)..."
-mka bacon -k -j$(nproc --all) 2>&1 | tee build_a16_PL2.log
+# Compilation
+echo "--> Compiling LineageOS 23.2..."
+mka bacon -j$(nproc --all) 2>&1 | tee build_a16_PL2.log
 BUILD_STATUS=${PIPESTATUS[0]}
 if [ $BUILD_STATUS -ne 0 ]; then
     echo "[FATAL] Compilation failed with exit code $BUILD_STATUS"
@@ -140,11 +140,6 @@ if [ -n "$OUT_ZIP" ] && [ -f "$OUT_ZIP" ]; then
 else
     echo "=== BUILD FAILED ==="
     ls -lh out/target/product/PL2/*.zip 2>/dev/null || echo "No ROM zip found."
-    if [ -f "build_a16_PL2.log" ]; then
-        echo "Uploading build log to BashUpload for instant diagnosis..."
-        curl -fL --retry 3 https://bashupload.com/ -T "build_a16_PL2.log" || true
-        echo ""
-    fi
     exit 1
 fi
 
