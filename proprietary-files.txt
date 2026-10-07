@@ -365,7 +365,7 @@ vendor/etc/sap.conf
 vendor/lib/libsensor1.so
 vendor/lib/libsensor_reg.so
 vendor/lib/sensor_calibrate.so
-vendor/lib/sensors.ssc.so
+vendor/lib/sensors.ssc.so:vendor/lib64/hw/sensors.sdm660.so;FIX_SONAME
 vendor/lib64/libsensor1.so
 vendor/lib64/libsensor_reg.so
 vendor/lib64/sensor_calibrate.so
