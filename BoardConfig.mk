@@ -15,6 +15,7 @@
 #
 
 DEVICE_PATH := device/nokia/PL2
+DISABLE_DEXPREOPT_CHECK := true
 
 # Inherit from nokia sdm660-common
 -include device/nokia/sdm660-common/BoardConfigCommon.mk
