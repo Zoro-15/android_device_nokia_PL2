@@ -39,6 +39,12 @@ cat << "EOF" > .repo/local_manifests/PL2.xml
   <remove-project name="LineageOS/android_hardware_qcom_media" />
   <remove-project name="LineageOS/android_device_qcom_sepolicy" />
   <remove-project name="LineageOS/android_hardware_lineage_compat" />
+  <remove-project name="LineageOS/android_frameworks_native" />
+  <remove-project name="LineageOS/android_system_sepolicy" />
+  <remove-project name="LineageOS/android_external_kotlinx.serialization" />
+  <remove-project name="platform/external/kotlinx.serialization" />
+  <remove-project name="LineageOS/android_tools_metalava" />
+  <remove-project name="platform/tools/metalava" />
 
   <project path="device/nokia/sdm660-common" name="Zoro-15/android_device_nokia_sdm660-common" remote="github" revision="lineage-23.2" />
   <project path="device/nokia/PL2" name="Zoro-15/android_device_nokia_PL2" remote="github" revision="lineage-23.2" />
@@ -49,7 +55,11 @@ cat << "EOF" > .repo/local_manifests/PL2.xml
   <project path="hardware/qcom-caf/sdm660/display" name="Zoro-15/android_hardware_qcom_display" remote="github" revision="lineage-23.2-caf-msm8953" />
   <project path="hardware/qcom-caf/sdm660/media" name="Zoro-15/android_hardware_qcom_media" remote="github" revision="lineage-23.2-caf-msm8953" />
   <project path="device/qcom/sepolicy-legacy-um" name="Zoro-15/android_device_qcom_sepolicy" remote="github" revision="lineage-23.2" />
-  <project path="hardware/lineage/compat" name="log1cs/android_hardware_lineage_compat" remote="github" revision="lineage-23.2" />
+  <project path="hardware/lineage/compat" name="Zoro-15/android_hardware_lineage_compat" remote="github" revision="lineage-23.2" />
+  <project path="frameworks/native" name="Zoro-15/android_frameworks_native" remote="github" revision="lineage-23.2" />
+  <project path="system/sepolicy" name="Zoro-15/android_system_sepolicy" remote="github" revision="lineage-23.2" />
+  <project path="external/kotlinx.serialization" name="Zoro-15/android_external_kotlinx.serialization" remote="github" revision="lineage-23.2" />
+  <project path="tools/metalava" name="Zoro-15/android_tools_metalava" remote="github" revision="lineage-23.2" />
 </manifest>
 EOF
 
@@ -73,7 +83,11 @@ set -e
 [ ! -d "hardware/qcom-caf/sdm660/display" ] && git clone --depth=1 -b lineage-23.2-caf-msm8953 https://github.com/Zoro-15/android_hardware_qcom_display.git hardware/qcom-caf/sdm660/display
 [ ! -d "hardware/qcom-caf/sdm660/media" ] && git clone --depth=1 -b lineage-23.2-caf-msm8953 https://github.com/Zoro-15/android_hardware_qcom_media.git hardware/qcom-caf/sdm660/media
 [ ! -d "device/qcom/sepolicy-legacy-um" ] && git clone --depth=1 -b lineage-23.2 https://github.com/Zoro-15/android_device_qcom_sepolicy.git device/qcom/sepolicy-legacy-um
-[ ! -d "hardware/lineage/compat" ] && git clone --depth=1 -b lineage-23.2 https://github.com/log1cs/android_hardware_lineage_compat.git hardware/lineage/compat
+[ ! -d "hardware/lineage/compat" ] && git clone --depth=1 -b lineage-23.2 https://github.com/Zoro-15/android_hardware_lineage_compat.git hardware/lineage/compat
+[ ! -d "frameworks/native" ] && git clone --depth=1 -b lineage-23.2 https://github.com/Zoro-15/android_frameworks_native.git frameworks/native
+[ ! -d "system/sepolicy" ] && git clone --depth=1 -b lineage-23.2 https://github.com/Zoro-15/android_system_sepolicy.git system/sepolicy
+[ ! -d "external/kotlinx.serialization" ] && git clone --depth=1 -b lineage-23.2 https://github.com/Zoro-15/android_external_kotlinx.serialization.git external/kotlinx.serialization
+[ ! -d "tools/metalava" ] && git clone --depth=1 -b lineage-23.2 https://github.com/Zoro-15/android_tools_metalava.git tools/metalava
 
 # Soong namespaces
 mkdir -p hardware/qcom-caf/sdm660 hardware/qcom-caf/msm8998
