@@ -43,9 +43,7 @@ cat << "EOF" > .repo/local_manifests/PL2.xml
   <remove-project name="LineageOS/android_hardware_lineage_compat" />
   <remove-project name="LineageOS/android_frameworks_native" />
   <remove-project name="LineageOS/android_system_sepolicy" />
-  <remove-project name="LineageOS/android_external_kotlinx.serialization" />
   <remove-project name="platform/external/kotlinx.serialization" />
-  <remove-project name="LineageOS/android_tools_metalava" />
   <remove-project name="platform/tools/metalava" />
 
   <project path="device/nokia/sdm660-common" name="Zoro-15/android_device_nokia_sdm660-common" remote="github" revision="lineage-23.2" />
