@@ -24,6 +24,7 @@ rm -rf vendor/nokia/PL2 vendor/nokia/sdm660-common
 rm -rf kernel/nokia/sdm660
 rm -rf hardware/qcom-caf/sdm660 hardware/qcom-caf/msm8998
 rm -rf device/qcom/sepolicy-legacy-um hardware/lineage/compat
+rm -rf vendor/qcom/opensource/display
 
 # Manifest initialization & Local manifest deployment
 echo "--> Initializing LineageOS 23.2 base manifest..."
@@ -37,6 +38,7 @@ cat << "EOF" > .repo/local_manifests/PL2.xml
   <remove-project name="LineageOS/android_hardware_qcom_audio" />
   <remove-project name="LineageOS/android_hardware_qcom_display" />
   <remove-project name="LineageOS/android_hardware_qcom_media" />
+  <remove-project name="LineageOS/android_vendor_qcom_opensource_display" />
   <remove-project name="LineageOS/android_device_qcom_sepolicy" />
   <remove-project name="LineageOS/android_hardware_lineage_compat" />
   <remove-project name="LineageOS/android_frameworks_native" />
