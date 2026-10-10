@@ -19,7 +19,7 @@ fi
 
 # 3. Clean Corrupted Ninja Graphs, Cached Environment, & Stale Intermediates
 echo "--> Cleaning stale build graphs and cached environments..."
-rm -rf out/*.ninja out/soong/*.ninja out/soong/build.* out/soong/.ninja* out/.ninja*
+rm -rf out/.module_paths out/*.ninja out/soong/*.ninja out/soong/build.* out/soong/.ninja* out/.ninja*
 rm -rf out/soong/soong.environment.* out/soong/soong.*.variables out/soong/soong.variables
 rm -rf out/soong/Android-*.mk out/soong/installs-*.mk out/soong/system_server_dexjars
 rm -rf out/soong/.intermediates/tools/metalava \
@@ -27,12 +27,18 @@ rm -rf out/soong/.intermediates/tools/metalava \
        out/soong/.intermediates/system/sepolicy \
        out/soong/.intermediates/hardware/qcom-caf/sdm660 \
        out/soong/.intermediates/vendor/qcom/opensource/display \
-       out/soong/.intermediates/vendor/nokia/sdm660-common
+       out/soong/.intermediates/vendor/nokia/sdm660-common \
+       out/soong/.intermediates/vendor/nokia/PL2
 
-# 4. Ensure Display Repositories for libqdMetaData
+# 4. Ensure Repositories for libqdMetaData and Vendor Blobs
 if [ -d "hardware/qcom-caf/sdm660/display" ]; then
     echo "--> Updating hardware/qcom-caf/sdm660/display..."
     git -C hardware/qcom-caf/sdm660/display pull origin lineage-23.2-caf-msm8953 2>/dev/null || true
+fi
+
+if [ -d "vendor/nokia/PL2/.git" ]; then
+    echo "--> Updating vendor/nokia/PL2..."
+    git -C vendor/nokia/PL2 pull origin lineage-23.2 2>/dev/null || true
 fi
 
 if [ ! -d "vendor/qcom/opensource/commonsys-intf/display" ]; then
@@ -44,12 +50,13 @@ fi
 
 # 5. Ensure Hardware CAF Soong Namespaces
 # Purge extraneous, corrupted CAF chipset trees that interfere with SDM660 Soong analysis
-rm -rf hardware/qcom-caf/sm8* hardware/qcom-caf/sdm845*
+rm -rf hardware/qcom-caf/sm* hardware/qcom-caf/sdm845*
 
 mkdir -p hardware/qcom-caf/sdm660 hardware/qcom-caf/msm8998
 cat << "EOF" > hardware/qcom-caf/sdm660/Android.bp
 soong_namespace {
     imports: [
+        "vendor/qcom/opensource/display",
         "vendor/qcom/opensource/commonsys-intf/display",
         "vendor/nokia/sdm660-common",
     ],
