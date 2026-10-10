@@ -13,7 +13,6 @@ export SOONG_ALLOW_MISSING_DEPENDENCIES=true
 export DISABLE_DEXPREOPT_CHECK=true
 export WITH_DEXPREOPT=false
 export WITHOUT_CHECK_API=true
-export BUILD_FROM_SOURCE_STUB=true
 export SKIP_ABI_CHECKS=true
 export SELINUX_IGNORE_NEVERALLOWS=true
 export SEPOLICY_IGNORE_NEVERALLOWS=true
@@ -134,14 +133,12 @@ done
 [ ! -d "vendor/qcom/opensource/display" ] && git clone --depth=1 -b lineage-23.2 https://github.com/LineageOS/android_vendor_qcom_opensource_display.git vendor/qcom/opensource/display
 [ ! -d "vendor/qcom/opensource/commonsys-intf/display" ] && git clone --depth=1 -b lineage-23.2 https://github.com/LineageOS/android_vendor_qcom_opensource_display-commonsys-intf.git vendor/qcom/opensource/commonsys-intf/display
 
-# Remove duplicate libqdmetadata from generic display repo (sdm660 uses hardware/qcom-caf/sdm660/display/libqdutils)
-rm -rf vendor/qcom/opensource/display/libqdmetadata
-
 # 6. Ensure Dummy Soong Namespaces
 mkdir -p hardware/qcom-caf/sdm660 hardware/qcom-caf/msm8998
 cat << "EOF" > hardware/qcom-caf/sdm660/Android.bp
 soong_namespace {
     imports: [
+        "vendor/qcom/opensource/display",
         "vendor/qcom/opensource/commonsys-intf/display",
         "vendor/nokia/sdm660-common",
     ],
