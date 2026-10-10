@@ -139,7 +139,13 @@ rm -rf vendor/qcom/opensource/display/libqdmetadata
 
 # 6. Ensure Dummy Soong Namespaces
 mkdir -p hardware/qcom-caf/sdm660 hardware/qcom-caf/msm8998
-echo "soong_namespace {}" > hardware/qcom-caf/sdm660/Android.bp
+cat << "EOF" > hardware/qcom-caf/sdm660/Android.bp
+soong_namespace {
+    imports: [
+        "vendor/qcom/opensource/commonsys-intf/display",
+    ],
+}
+EOF
 echo "soong_namespace {}" > hardware/qcom-caf/msm8998/Android.bp
 
 # 7. Environment & Lunch Target Selection

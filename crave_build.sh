@@ -150,6 +150,17 @@ elif [ -x "prebuilts/misc/linux-x86/ccache/ccache" ]; then
     "$CCACHE_EXEC" -o compression=true 2>/dev/null || true
 fi
 
+# Dummy Soong Namespaces
+mkdir -p hardware/qcom-caf/sdm660 hardware/qcom-caf/msm8998
+cat << "EOF" > hardware/qcom-caf/sdm660/Android.bp
+soong_namespace {
+    imports: [
+        "vendor/qcom/opensource/commonsys-intf/display",
+    ],
+}
+EOF
+echo "soong_namespace {}" > hardware/qcom-caf/msm8998/Android.bp
+
 # Environment & Lunch
 rm -f .repo/local_manifests/roomservice.xml
 source build/envsetup.sh
