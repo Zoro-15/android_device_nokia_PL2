@@ -43,6 +43,9 @@ else
 fi
 
 # 5. Ensure Hardware CAF Soong Namespaces
+# Purge extraneous, corrupted CAF chipset trees that interfere with SDM660 Soong analysis
+rm -rf hardware/qcom-caf/sm8* hardware/qcom-caf/sdm845*
+
 mkdir -p hardware/qcom-caf/sdm660 hardware/qcom-caf/msm8998
 cat << "EOF" > hardware/qcom-caf/sdm660/Android.bp
 soong_namespace {
@@ -53,18 +56,6 @@ soong_namespace {
 }
 EOF
 echo "soong_namespace {}" > hardware/qcom-caf/msm8998/Android.bp
-
-# Fix any stale/synthetic sm8750 namespace so it resolves qtidisplay_defaults
-if [ -d "hardware/qcom-caf/sm8750" ]; then
-    cat << "EOF" > hardware/qcom-caf/sm8750/Android.bp
-soong_namespace {
-    imports: [
-        "hardware/qcom/sm7250/display",
-        "vendor/qcom/opensource/commonsys-intf/display",
-    ],
-}
-EOF
-fi
 
 # 6. Environment & Lunch Selection
 source build/envsetup.sh
