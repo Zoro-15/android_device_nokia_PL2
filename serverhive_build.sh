@@ -71,6 +71,14 @@ if git config --global --get http.cookiefile 2>/dev/null | grep -qi "USERPROFILE
 fi
 
 # 4. Sync Repositories
+echo "--> Aborting any stuck rebases across tree before sync..."
+for d in "kernel/nokia/sdm660" "vendor/nokia/PL2" "device/nokia/PL2" "device/nokia/sdm660-common" "vendor/nokia/sdm660-common" "tools/metalava"; do
+    if [ -d "$d/.git" ]; then
+        git -C "$d" rebase --abort 2>/dev/null || true
+        git -C "$d" merge --abort 2>/dev/null || true
+    fi
+done
+
 echo "--> Syncing source repositories (ServerHive optimized flags)..."
 set +e
 repo sync -c -j$(nproc --all) --force-sync --no-clone-bundle --no-tags --optimized-fetch --prune
@@ -78,32 +86,33 @@ set -e
 
 # 5. Fallback Clones & Fast Updates (Guarantees all 15 repositories exist & are up to date)
 echo "--> Verifying and updating custom repository checkouts..."
-REPOS_TO_PULL=(
-    "device/nokia/sdm660-common"
-    "device/nokia/PL2"
-    "vendor/nokia/sdm660-common"
-    "vendor/nokia/PL2"
-    "kernel/nokia/sdm660"
-    "hardware/qcom-caf/sdm660/audio"
-    "hardware/qcom-caf/sdm660/display"
-    "hardware/qcom-caf/sdm660/media"
-    "device/qcom/sepolicy-legacy-um"
-    "hardware/lineage/compat"
-    "frameworks/native"
-    "system/sepolicy"
-    "external/kotlinx.serialization"
-    "tools/metalava"
-    "vendor/qcom/opensource/display"
+REPOS_TO_SYNC=(
+    "device/nokia/sdm660-common:lineage-23.2"
+    "device/nokia/PL2:lineage-23.2"
+    "vendor/nokia/sdm660-common:lineage-23.2"
+    "vendor/nokia/PL2:lineage-23.2"
+    "kernel/nokia/sdm660:lineage-23.2"
+    "hardware/qcom-caf/sdm660/audio:lineage-23.2"
+    "hardware/qcom-caf/sdm660/display:lineage-23.2-caf-msm8953"
+    "hardware/qcom-caf/sdm660/media:lineage-23.2-caf-msm8953"
+    "device/qcom/sepolicy-legacy-um:lineage-23.2"
+    "hardware/lineage/compat:lineage-23.2"
+    "frameworks/native:lineage-23.2"
+    "system/sepolicy:lineage-23.2"
+    "external/kotlinx.serialization:lineage-23.2"
+    "tools/metalava:lineage-23.2"
+    "vendor/qcom/opensource/display:lineage-23.2"
 )
-for r in "${REPOS_TO_PULL[@]}"; do
+for entry in "${REPOS_TO_SYNC[@]}"; do
+    r="${entry%%:*}"
+    target_branch="${entry##*:}"
     if [ -d "$r/.git" ]; then
         git -C "$r" rebase --abort 2>/dev/null || true
         git -C "$r" merge --abort 2>/dev/null || true
         REMOTE_NAME=$(git -C "$r" remote 2>/dev/null | head -n 1)
-        BRANCH_NAME=$(git -C "$r" rev-parse --abbrev-ref HEAD 2>/dev/null || echo "lineage-23.2")
-        echo "--> Syncing $r cleanly (remote: ${REMOTE_NAME:-origin}, branch: $BRANCH_NAME)..."
         if [ -n "$REMOTE_NAME" ]; then
-            git -C "$r" fetch "$REMOTE_NAME" "$BRANCH_NAME" --depth=1 2>/dev/null || true
+            echo "--> Syncing $r to $REMOTE_NAME/$target_branch..."
+            git -C "$r" fetch "$REMOTE_NAME" "$target_branch" --depth=1 2>/dev/null || true
             git -C "$r" reset --hard "FETCH_HEAD" 2>/dev/null || true
         fi
     fi
@@ -134,8 +143,21 @@ echo "soong_namespace {}" > hardware/qcom-caf/msm8998/Android.bp
 # 7. Environment & Lunch Target Selection
 rm -f .repo/local_manifests/roomservice.xml
 source build/envsetup.sh
-echo "--> Selecting lunch target: lineage_PL2-userdebug"
-lunch lineage_PL2-userdebug
+
+LUNCH_TARGET=""
+for candidate in "lineage_PL2-bp4a-userdebug" "lineage_PL2-bp1a-userdebug" "lineage_PL2-trunk_staging-userdebug" "lineage_PL2-ap4a-userdebug"; do
+    echo "--> Probing lunch target: $candidate..."
+    if lunch "$candidate" 2>/dev/null; then
+        LUNCH_TARGET="$candidate"
+        echo "--> Successfully selected: $LUNCH_TARGET"
+        break
+    fi
+done
+
+if [ -z "$LUNCH_TARGET" ]; then
+    echo "--> Falling back to legacy lunch..."
+    lunch lineage_PL2-userdebug || { echo "[FATAL] Lunch failed!"; exit 1; }
+fi
 
 # 8. Clean Stale Intermediate Targets & Verify Soong Analysis
 echo "--> Cleaning stale build targets..."
