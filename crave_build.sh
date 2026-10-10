@@ -12,7 +12,6 @@ export _JAVA_OPTIONS="-Xmx8g"
 export SOONG_ALLOW_MISSING_DEPENDENCIES=true
 export DISABLE_DEXPREOPT_CHECK=true
 export WITH_DEXPREOPT=false
-export WITHOUT_CHECK_API=true
 export SKIP_ABI_CHECKS=true
 
 # Pre-flight tree cleanup
