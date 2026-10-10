@@ -38,6 +38,13 @@ if [ -d "hardware/qcom-caf/sdm660/display" ]; then
     git -C hardware/qcom-caf/sdm660/display checkout -B lineage-23.2-caf-msm8953 origin/lineage-23.2-caf-msm8953 2>/dev/null || true
 fi
 
+if [ -d "device/nokia/sdm660-common/.git" ]; then
+    echo "--> Updating device/nokia/sdm660-common..."
+    git -C device/nokia/sdm660-common fetch --all 2>/dev/null || true
+    git -C device/nokia/sdm660-common checkout -B lineage-23.2 github/lineage-23.2 2>/dev/null || \
+    git -C device/nokia/sdm660-common checkout -B lineage-23.2 origin/lineage-23.2 2>/dev/null || true
+fi
+
 if [ -d "vendor/nokia/PL2/.git" ]; then
     echo "--> Updating vendor/nokia/PL2..."
     git -C vendor/nokia/PL2 fetch --all 2>/dev/null || true
