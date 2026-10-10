@@ -97,8 +97,14 @@ REPOS_TO_PULL=(
 )
 for r in "${REPOS_TO_PULL[@]}"; do
     if [ -d "$r/.git" ]; then
-        echo "--> Pulling latest changes in $r..."
-        git -C "$r" pull --rebase origin $(git -C "$r" rev-parse --abbrev-ref HEAD 2>/dev/null || echo "lineage-23.2") || true
+        REMOTE_NAME=$(git -C "$r" remote 2>/dev/null | head -n 1)
+        BRANCH_NAME=$(git -C "$r" rev-parse --abbrev-ref HEAD 2>/dev/null || echo "lineage-23.2")
+        echo "--> Pulling latest changes in $r (remote: ${REMOTE_NAME:-origin}, branch: $BRANCH_NAME)..."
+        if [ -n "$REMOTE_NAME" ]; then
+            git -C "$r" pull --rebase "$REMOTE_NAME" "$BRANCH_NAME" || true
+        else
+            git -C "$r" pull --rebase || true
+        fi
     fi
 done
 
