@@ -75,7 +75,15 @@ if [ ! -d "hardware/qcom-caf/sm8450/audio/primary-hal" ]; then
     repo sync -l -d hardware/qcom-caf/sm8450/audio/primary-hal 2>/dev/null || true
 fi
 
-mkdir -p hardware/qcom-caf/sdm660 hardware/qcom-caf/msm8998
+# Isolate all non-SDM660 CAF chipset trees into separate soong namespaces so they
+# do not evaluate in the root namespace, while preserving their worktrees for repo manifest
+mkdir -p hardware/qcom-caf/sdm660 hardware/qcom-caf/msm8998 hardware/qcom-caf/sm8450
+for chipset in hardware/qcom-caf/sm* hardware/qcom-caf/sdm845* hardware/qcom-caf/msm8998; do
+    if [ -d "$chipset" ] && [ "$chipset" != "hardware/qcom-caf/sdm660" ]; then
+        echo "soong_namespace {}" > "$chipset/Android.bp"
+    fi
+done
+
 cat << "EOF" > hardware/qcom-caf/sdm660/Android.bp
 soong_namespace {
     imports: [
@@ -85,7 +93,6 @@ soong_namespace {
     ],
 }
 EOF
-echo "soong_namespace {}" > hardware/qcom-caf/msm8998/Android.bp
 
 # 6. Environment & Lunch Selection
 source build/envsetup.sh
