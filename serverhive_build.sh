@@ -143,6 +143,7 @@ cat << "EOF" > hardware/qcom-caf/sdm660/Android.bp
 soong_namespace {
     imports: [
         "vendor/qcom/opensource/commonsys-intf/display",
+        "vendor/nokia/sdm660-common",
     ],
 }
 EOF
