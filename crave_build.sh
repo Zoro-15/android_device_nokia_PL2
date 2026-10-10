@@ -98,12 +98,13 @@ REPOS_TO_PULL=(
 )
 for r in "${REPOS_TO_PULL[@]}"; do
     if [ -d "$r/.git" ]; then
+        git -C "$r" rebase --abort 2>/dev/null || true
+        git -C "$r" merge --abort 2>/dev/null || true
         REMOTE_NAME=$(git -C "$r" remote 2>/dev/null | head -n 1)
         BRANCH_NAME=$(git -C "$r" rev-parse --abbrev-ref HEAD 2>/dev/null || echo "lineage-23.2")
         if [ -n "$REMOTE_NAME" ]; then
-            git -C "$r" pull --rebase "$REMOTE_NAME" "$BRANCH_NAME" || true
-        else
-            git -C "$r" pull --rebase || true
+            git -C "$r" fetch "$REMOTE_NAME" "$BRANCH_NAME" --depth=1 2>/dev/null || true
+            git -C "$r" reset --hard "FETCH_HEAD" 2>/dev/null || true
         fi
     fi
 done
