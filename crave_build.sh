@@ -24,7 +24,14 @@ rm -rf vendor/nokia/PL2 vendor/nokia/sdm660-common
 rm -rf kernel/nokia/sdm660
 rm -rf hardware/qcom-caf/sdm660 hardware/qcom-caf/msm8998
 rm -rf device/qcom/sepolicy-legacy-um hardware/lineage/compat
-rm -rf vendor/qcom/opensource/display
+rm -rf frameworks/native system/sepolicy external/kotlinx.serialization tools/metalava
+
+# Clean conflicting git hooks from reused container checkouts
+rm -rf .repo/projects/external/kotlinx.serialization.git/hooks
+rm -rf .repo/projects/frameworks/native.git/hooks
+rm -rf .repo/projects/hardware/lineage/compat.git/hooks
+rm -rf .repo/projects/system/sepolicy.git/hooks
+rm -rf .repo/projects/tools/metalava.git/hooks
 
 # Manifest initialization & Local manifest deployment
 echo "--> Initializing LineageOS 23.2 base manifest..."
@@ -38,7 +45,6 @@ cat << "EOF" > .repo/local_manifests/PL2.xml
   <remove-project name="LineageOS/android_hardware_qcom_audio" />
   <remove-project name="LineageOS/android_hardware_qcom_display" />
   <remove-project name="LineageOS/android_hardware_qcom_media" />
-  <remove-project name="LineageOS/android_vendor_qcom_opensource_display" />
   <remove-project name="LineageOS/android_device_qcom_sepolicy" />
   <remove-project name="LineageOS/android_hardware_lineage_compat" />
   <remove-project name="LineageOS/android_frameworks_native" />
@@ -88,11 +94,12 @@ set -e
 [ ! -d "system/sepolicy" ] && git clone --depth=1 -b lineage-23.2 https://github.com/Zoro-15/android_system_sepolicy.git system/sepolicy
 [ ! -d "external/kotlinx.serialization" ] && git clone --depth=1 -b lineage-23.2 https://github.com/Zoro-15/android_external_kotlinx.serialization.git external/kotlinx.serialization
 [ ! -d "tools/metalava" ] && git clone --depth=1 -b lineage-23.2 https://github.com/Zoro-15/android_tools_metalava.git tools/metalava
+[ ! -d "vendor/qcom/opensource/display" ] && git clone --depth=1 -b lineage-23.2 https://github.com/LineageOS/android_vendor_qcom_opensource_display.git vendor/qcom/opensource/display
 
 # Soong namespaces
 mkdir -p hardware/qcom-caf/sdm660 hardware/qcom-caf/msm8998
-[ ! -f "hardware/qcom-caf/sdm660/Android.bp" ] && echo "soong_namespace {}" > hardware/qcom-caf/sdm660/Android.bp
-[ ! -f "hardware/qcom-caf/msm8998/Android.bp" ] && echo "soong_namespace {}" > hardware/qcom-caf/msm8998/Android.bp
+echo "soong_namespace {}" > hardware/qcom-caf/sdm660/Android.bp
+echo "soong_namespace {}" > hardware/qcom-caf/msm8998/Android.bp
 
 # CCACHE setup
 if command -v ccache &>/dev/null; then
