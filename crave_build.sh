@@ -175,8 +175,7 @@ if [ -z "$LUNCH_TARGET" ]; then
 fi
 
 # Pre-build cleanup & Soong analysis
-echo "--> Cleaning stale build targets and resetting Ninja graph..."
-make installclean || true
+echo "--> Purging corrupted/stale Ninja graphs and intermediate targets..."
 rm -rf out/*.ninja out/soong/*.ninja out/soong/build.* out/soong/Android-*.mk out/soong/installs-*.mk out/soong/system_server_dexjars out/soong/.ninja_deps out/soong/.ninja_log
 rm -rf out/soong/.intermediates/tools/metalava \
        out/soong/.intermediates/frameworks/base/api \
