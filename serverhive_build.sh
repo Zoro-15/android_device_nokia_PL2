@@ -54,6 +54,18 @@ soong_namespace {
 EOF
 echo "soong_namespace {}" > hardware/qcom-caf/msm8998/Android.bp
 
+# Fix any stale/synthetic sm8750 namespace so it resolves qtidisplay_defaults
+if [ -d "hardware/qcom-caf/sm8750" ]; then
+    cat << "EOF" > hardware/qcom-caf/sm8750/Android.bp
+soong_namespace {
+    imports: [
+        "hardware/qcom/sm7250/display",
+        "vendor/qcom/opensource/commonsys-intf/display",
+    ],
+}
+EOF
+fi
+
 # 6. Environment & Lunch Selection
 source build/envsetup.sh
 echo "--> Selecting lunch target..."
