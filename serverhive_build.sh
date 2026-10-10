@@ -164,7 +164,7 @@ fi
 # 8. Clean Stale Intermediate Targets & Verify Soong Analysis
 echo "--> Cleaning stale build targets..."
 make installclean || true
-rm -rf out/soong/Android-*.mk out/soong/installs-*.mk out/soong/system_server_dexjars out/soong/.ninja_deps out/soong/.ninja_log
+rm -rf out/*.ninja out/soong/*.ninja out/soong/build.* out/soong/Android-*.mk out/soong/installs-*.mk out/soong/system_server_dexjars out/soong/.ninja_deps out/soong/.ninja_log
 
 echo "--> Verifying Blueprint/Soong graph analysis..."
 m nothing -j$(nproc --all)
