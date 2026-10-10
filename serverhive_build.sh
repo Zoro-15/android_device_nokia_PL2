@@ -24,13 +24,22 @@ rm -rf out/soong/soong.environment.* out/soong/soong.*.variables out/soong/soong
 rm -rf out/soong/Android-*.mk out/soong/installs-*.mk out/soong/system_server_dexjars
 rm -rf out/soong/.intermediates/tools/metalava \
        out/soong/.intermediates/frameworks/base/api \
+       out/soong/.intermediates/frameworks/base/libs/hwui \
        out/soong/.intermediates/system/sepolicy \
        out/soong/.intermediates/hardware/qcom-caf/sdm660 \
        out/soong/.intermediates/vendor/qcom/opensource/display \
        out/soong/.intermediates/vendor/nokia/sdm660-common \
-       out/soong/.intermediates/vendor/nokia/PL2
+       out/soong/.intermediates/vendor/nokia/PL2 \
+       out/target/product/PL2/system/product/etc/build-manifest.xml
 
 # 4. Ensure Repositories for libqdMetaData and Vendor Blobs
+if [ -d "tools/metalava/.git" ]; then
+    echo "--> Updating tools/metalava..."
+    git -C tools/metalava fetch --all 2>/dev/null || true
+    git -C tools/metalava checkout -B lineage-23.2 github/lineage-23.2 2>/dev/null || \
+    git -C tools/metalava checkout -B lineage-23.2 origin/lineage-23.2 2>/dev/null || true
+fi
+
 if [ -d "hardware/qcom-caf/sdm660/display" ]; then
     echo "--> Updating hardware/qcom-caf/sdm660/display..."
     git -C hardware/qcom-caf/sdm660/display fetch --all 2>/dev/null || true
@@ -59,9 +68,12 @@ else
     git -C vendor/qcom/opensource/commonsys-intf/display checkout -- . 2>/dev/null || true
 fi
 
-# 5. Ensure Hardware CAF Soong Namespaces
-# Purge extraneous, corrupted CAF chipset trees that interfere with SDM660 Soong analysis
-rm -rf hardware/qcom-caf/sm* hardware/qcom-caf/sdm845*
+# 5. Ensure Hardware CAF Soong Namespaces & Repo Worktrees
+# Restore missing repo worktrees so build-manifest generation succeeds
+if [ ! -d "hardware/qcom-caf/sm8450/audio/primary-hal" ]; then
+    echo "--> Restoring missing repo worktrees for manifest generation..."
+    repo sync -l -d hardware/qcom-caf/sm8450/audio/primary-hal 2>/dev/null || true
+fi
 
 mkdir -p hardware/qcom-caf/sdm660 hardware/qcom-caf/msm8998
 cat << "EOF" > hardware/qcom-caf/sdm660/Android.bp
