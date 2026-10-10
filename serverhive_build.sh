@@ -25,9 +25,26 @@ rm -rf out/soong/Android-*.mk out/soong/installs-*.mk out/soong/system_server_de
 rm -rf out/soong/.intermediates/tools/metalava \
        out/soong/.intermediates/frameworks/base/api \
        out/soong/.intermediates/system/sepolicy \
-       out/soong/.intermediates/hardware/qcom-caf/sdm660
+       out/soong/.intermediates/hardware/qcom-caf/sdm660 \
+       out/soong/.intermediates/vendor/qcom/opensource/display \
+       out/soong/.intermediates/vendor/nokia/sdm660-common
 
-# 4. Ensure Hardware CAF Soong Namespaces
+# 4. Ensure Display Repositories for libqdMetaData
+if [ ! -d "vendor/qcom/opensource/display" ]; then
+    echo "--> Cloning vendor/qcom/opensource/display..."
+    git clone --depth=1 -b lineage-23.2 https://github.com/LineageOS/android_vendor_qcom_opensource_display.git vendor/qcom/opensource/display
+else
+    git -C vendor/qcom/opensource/display checkout -- . 2>/dev/null || true
+fi
+
+if [ ! -d "vendor/qcom/opensource/commonsys-intf/display" ]; then
+    echo "--> Cloning vendor/qcom/opensource/commonsys-intf/display..."
+    git clone --depth=1 -b lineage-23.2 https://github.com/LineageOS/android_vendor_qcom_opensource_display-commonsys-intf.git vendor/qcom/opensource/commonsys-intf/display
+else
+    git -C vendor/qcom/opensource/commonsys-intf/display checkout -- . 2>/dev/null || true
+fi
+
+# 5. Ensure Hardware CAF Soong Namespaces
 mkdir -p hardware/qcom-caf/sdm660 hardware/qcom-caf/msm8998
 cat << "EOF" > hardware/qcom-caf/sdm660/Android.bp
 soong_namespace {
@@ -40,7 +57,7 @@ soong_namespace {
 EOF
 echo "soong_namespace {}" > hardware/qcom-caf/msm8998/Android.bp
 
-# 5. Environment & Lunch Selection
+# 6. Environment & Lunch Selection
 source build/envsetup.sh
 echo "--> Selecting lunch target..."
 if lunch lineage_PL2-bp4a-userdebug 2>/dev/null; then
@@ -54,12 +71,12 @@ else
     lunch lineage_PL2-userdebug || { echo "[FATAL] Lunch failed!"; exit 1; }
 fi
 
-# 6. Direct Compilation
+# 7. Direct Compilation
 echo "--> Compiling LineageOS 23.2 with all $(nproc --all) cores..."
 mka bacon -k -j$(nproc --all) 2>&1 | tee build_a16_PL2.log
 BUILD_STATUS=${PIPESTATUS[0]}
 
-# 7. Output Artifact Handling & Cloud Upload
+# 8. Output Artifact Handling & Cloud Upload
 OUT_ZIP=$(ls out/target/product/PL2/lineage-23.2-*-UNOFFICIAL-PL2.zip 2>/dev/null | head -n 1 || true)
 if [ -n "$OUT_ZIP" ] && [ -f "$OUT_ZIP" ]; then
     echo "=== COMPILATION SUCCEEDED: $OUT_ZIP ==="

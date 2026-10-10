@@ -182,7 +182,9 @@ rm -rf out/soong/soong.environment.* out/soong/soong.*.variables out/soong/soong
 rm -rf out/soong/.intermediates/tools/metalava \
        out/soong/.intermediates/frameworks/base/api \
        out/soong/.intermediates/system/sepolicy \
-       out/soong/.intermediates/hardware/qcom-caf/sdm660
+       out/soong/.intermediates/hardware/qcom-caf/sdm660 \
+       out/soong/.intermediates/vendor/qcom/opensource/display \
+       out/soong/.intermediates/vendor/nokia/sdm660-common
 
 echo "--> Verifying Soong analysis..."
 m nothing -j$(nproc --all)
