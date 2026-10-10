@@ -61,7 +61,6 @@ cat << "EOF" > .repo/local_manifests/PL2.xml
   <project path="system/sepolicy" name="Zoro-15/android_system_sepolicy" remote="github" revision="lineage-23.2" />
   <project path="external/kotlinx.serialization" name="Zoro-15/android_external_kotlinx.serialization" remote="github" revision="lineage-23.2" />
   <project path="tools/metalava" name="Zoro-15/android_tools_metalava" remote="github" revision="lineage-23.2" />
-  <project path="vendor/qcom/opensource/commonsys-intf/display" name="LineageOS/android_vendor_qcom_opensource_display-commonsys-intf" remote="github" revision="lineage-23.2" />
 </manifest>
 EOF
 
