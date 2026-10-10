@@ -25,6 +25,7 @@ rm -rf out/soong/Android-*.mk out/soong/installs-*.mk out/soong/system_server_de
 rm -rf out/soong/.intermediates/tools/metalava \
        out/soong/.intermediates/frameworks/base/api \
        out/soong/.intermediates/frameworks/base/libs/hwui \
+       out/soong/.intermediates/external/boringssl \
        out/soong/.intermediates/system/sepolicy \
        out/soong/.intermediates/hardware/qcom-caf/sdm660 \
        out/soong/.intermediates/vendor/qcom/opensource/display \
@@ -70,10 +71,8 @@ fi
 
 # 5. Ensure Hardware CAF Soong Namespaces & Repo Worktrees
 # Restore missing repo worktrees so build-manifest generation succeeds
-if [ ! -d "hardware/qcom-caf/sm8450/audio/primary-hal" ]; then
-    echo "--> Restoring missing repo worktrees for manifest generation..."
-    repo sync -l -d hardware/qcom-caf/sm8450/audio/primary-hal 2>/dev/null || true
-fi
+echo "--> Restoring missing repo worktrees for manifest generation..."
+repo sync -l -d hardware/qcom-caf/sm* hardware/qcom-caf/sdm845* 2>/dev/null || true
 
 # Purge all extraneous Android.bp blueprint files inside non-SDM660 chipset trees (sm*, sdm845*)
 # This prevents Soong from parsing broken/unsupported HAL blueprints, while keeping
@@ -109,6 +108,8 @@ else
 fi
 
 # 7. Direct Compilation
+echo "--> Host disk space:"
+df -h . || true
 echo "--> Compiling LineageOS 23.2 with all $(nproc --all) cores..."
 mka bacon -k -j$(nproc --all) 2>&1 | tee build_a16_PL2.log
 BUILD_STATUS=${PIPESTATUS[0]}
