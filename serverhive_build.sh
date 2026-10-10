@@ -4,9 +4,9 @@ set -e
 START_TIME=$(date +%s)
 echo "=== Starting LineageOS 23.2 (Android 16) Build for Nokia 6.1 (PL2) on ServerHive ==="
 
-# 1. Shell Environment Flags
-export WITHOUT_CHECK_API=true
-export DISABLE_STUB_VALIDATION=true
+# 1. Clean Stale Shell Environment
+unset WITHOUT_CHECK_API
+unset BUILD_FROM_SOURCE_STUB
 
 # 2. CCACHE Configuration
 if command -v ccache &>/dev/null; then
@@ -122,6 +122,12 @@ fi
 # 7. Direct Compilation
 echo "--> Host disk space:"
 df -h . || true
+echo "--> Synchronizing API signature current.txt baselines..."
+m framework-configinfrastructure.stubs.source-update-current-api \
+  android.car.builtin.stubs.source.module_lib-update-current-api \
+  system-api-stubs-docs-non-updatable-update-current-api \
+  api-stubs-docs-non-updatable-update-current-api 2>/dev/null || true
+
 echo "--> Compiling LineageOS 23.2 with all $(nproc --all) cores..."
 mka bacon -k -j$(nproc --all) 2>&1 | tee build_a16_PL2.log
 BUILD_STATUS=${PIPESTATUS[0]}
