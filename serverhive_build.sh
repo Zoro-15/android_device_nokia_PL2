@@ -123,6 +123,21 @@ fi
 echo "--> Host disk space:"
 df -h . || true
 echo "--> Synchronizing API signature current.txt baselines..."
+CAR_SRC_API="out/soong/.intermediates/packages/services/Car/car-builtin-lib/android.car.builtin.stubs.source.module_lib/android_common/everything/android.car.builtin.stubs.source.module_lib_api.txt"
+if [ -f "$CAR_SRC_API" ]; then
+    cp -f "$CAR_SRC_API" packages/services/Car/car-builtin-lib/api/module-lib-current.txt 2>/dev/null || true
+fi
+
+FW_PUBLIC_API="out/soong/.intermediates/frameworks/base/api/api-stubs-docs-non-updatable/android_common/everything/api-stubs-docs-non-updatable_api.txt"
+if [ -f "$FW_PUBLIC_API" ]; then
+    cp -f "$FW_PUBLIC_API" frameworks/base/core/api/current.txt 2>/dev/null || true
+fi
+
+FW_SYSTEM_API="out/soong/.intermediates/frameworks/base/api/system-api-stubs-docs-non-updatable/android_common/everything/system-api-stubs-docs-non-updatable_api.txt"
+if [ -f "$FW_SYSTEM_API" ]; then
+    cp -f "$FW_SYSTEM_API" frameworks/base/core/api/system-current.txt 2>/dev/null || true
+fi
+
 m framework-configinfrastructure.stubs.source-update-current-api \
   android.car.builtin.stubs.source.module_lib-update-current-api \
   system-api-stubs-docs-non-updatable-update-current-api \
