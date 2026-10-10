@@ -30,11 +30,9 @@ rm -rf out/soong/.intermediates/tools/metalava \
        out/soong/.intermediates/vendor/nokia/sdm660-common
 
 # 4. Ensure Display Repositories for libqdMetaData
-if [ ! -d "vendor/qcom/opensource/display" ]; then
-    echo "--> Cloning vendor/qcom/opensource/display..."
-    git clone --depth=1 -b lineage-23.2 https://github.com/LineageOS/android_vendor_qcom_opensource_display.git vendor/qcom/opensource/display
-else
-    git -C vendor/qcom/opensource/display checkout -- . 2>/dev/null || true
+if [ -d "hardware/qcom-caf/sdm660/display" ]; then
+    echo "--> Updating hardware/qcom-caf/sdm660/display..."
+    git -C hardware/qcom-caf/sdm660/display pull origin lineage-23.2-caf-msm8953 2>/dev/null || true
 fi
 
 if [ ! -d "vendor/qcom/opensource/commonsys-intf/display" ]; then
@@ -49,7 +47,6 @@ mkdir -p hardware/qcom-caf/sdm660 hardware/qcom-caf/msm8998
 cat << "EOF" > hardware/qcom-caf/sdm660/Android.bp
 soong_namespace {
     imports: [
-        "vendor/qcom/opensource/display",
         "vendor/qcom/opensource/commonsys-intf/display",
         "vendor/nokia/sdm660-common",
     ],
