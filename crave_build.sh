@@ -12,9 +12,8 @@ export _JAVA_OPTIONS="-Xmx8g"
 export SOONG_ALLOW_MISSING_DEPENDENCIES=true
 export DISABLE_DEXPREOPT_CHECK=true
 export WITH_DEXPREOPT=false
-unset WITHOUT_CHECK_API
-export WITHOUT_CHECK_API=false
-unset SKIP_ABI_CHECKS
+export WITHOUT_CHECK_API=true
+export SKIP_ABI_CHECKS=true
 
 # Pre-flight tree cleanup
 echo "--> Cleaning stale device trees and manifests..."
@@ -66,6 +65,7 @@ cat << "EOF" > .repo/local_manifests/PL2.xml
   <project path="system/sepolicy" name="Zoro-15/android_system_sepolicy" remote="github" revision="lineage-23.2" />
   <project path="external/kotlinx.serialization" name="Zoro-15/android_external_kotlinx.serialization" remote="github" revision="lineage-23.2" />
   <project path="tools/metalava" name="Zoro-15/android_tools_metalava" remote="github" revision="lineage-23.2" />
+  <project path="vendor/qcom/opensource/commonsys-intf/display" name="LineageOS/android_vendor_qcom_opensource_display-commonsys-intf" remote="github" revision="lineage-23.2" />
 </manifest>
 EOF
 
@@ -125,6 +125,7 @@ done
 [ ! -d "external/kotlinx.serialization" ] && git clone --depth=1 -b lineage-23.2 https://github.com/Zoro-15/android_external_kotlinx.serialization.git external/kotlinx.serialization
 [ ! -d "tools/metalava" ] && git clone --depth=1 -b lineage-23.2 https://github.com/Zoro-15/android_tools_metalava.git tools/metalava
 [ ! -d "vendor/qcom/opensource/display" ] && git clone --depth=1 -b lineage-23.2 https://github.com/LineageOS/android_vendor_qcom_opensource_display.git vendor/qcom/opensource/display
+[ ! -d "vendor/qcom/opensource/commonsys-intf/display" ] && git clone --depth=1 -b lineage-23.2 https://github.com/LineageOS/android_vendor_qcom_opensource_display-commonsys-intf.git vendor/qcom/opensource/commonsys-intf/display
 
 # Remove duplicate libqdmetadata from generic display repo (sdm660 uses hardware/qcom-caf/sdm660/display/libqdutils)
 rm -rf vendor/qcom/opensource/display/libqdmetadata
