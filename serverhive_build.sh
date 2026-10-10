@@ -33,14 +33,16 @@ rm -rf out/soong/.intermediates/tools/metalava \
 # 4. Ensure Repositories for libqdMetaData and Vendor Blobs
 if [ -d "hardware/qcom-caf/sdm660/display" ]; then
     echo "--> Updating hardware/qcom-caf/sdm660/display..."
-    git -C hardware/qcom-caf/sdm660/display pull github lineage-23.2-caf-msm8953 2>/dev/null || \
-    git -C hardware/qcom-caf/sdm660/display pull origin lineage-23.2-caf-msm8953 2>/dev/null || true
+    git -C hardware/qcom-caf/sdm660/display fetch --all 2>/dev/null || true
+    git -C hardware/qcom-caf/sdm660/display checkout -B lineage-23.2-caf-msm8953 github/lineage-23.2-caf-msm8953 2>/dev/null || \
+    git -C hardware/qcom-caf/sdm660/display checkout -B lineage-23.2-caf-msm8953 origin/lineage-23.2-caf-msm8953 2>/dev/null || true
 fi
 
 if [ -d "vendor/nokia/PL2/.git" ]; then
     echo "--> Updating vendor/nokia/PL2..."
-    git -C vendor/nokia/PL2 pull github lineage-23.2 2>/dev/null || \
-    git -C vendor/nokia/PL2 pull origin lineage-23.2 2>/dev/null || true
+    git -C vendor/nokia/PL2 fetch --all 2>/dev/null || true
+    git -C vendor/nokia/PL2 checkout -B lineage-23.2 github/lineage-23.2 2>/dev/null || \
+    git -C vendor/nokia/PL2 checkout -B lineage-23.2 origin/lineage-23.2 2>/dev/null || true
 fi
 
 if [ ! -d "vendor/qcom/opensource/commonsys-intf/display" ]; then
