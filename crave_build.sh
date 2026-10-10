@@ -79,6 +79,29 @@ else
 fi
 set -e
 
+REPOS_TO_PULL=(
+    "device/nokia/sdm660-common"
+    "device/nokia/PL2"
+    "vendor/nokia/sdm660-common"
+    "vendor/nokia/PL2"
+    "kernel/nokia/sdm660"
+    "hardware/qcom-caf/sdm660/audio"
+    "hardware/qcom-caf/sdm660/display"
+    "hardware/qcom-caf/sdm660/media"
+    "device/qcom/sepolicy-legacy-um"
+    "hardware/lineage/compat"
+    "frameworks/native"
+    "system/sepolicy"
+    "external/kotlinx.serialization"
+    "tools/metalava"
+    "vendor/qcom/opensource/display"
+)
+for r in "${REPOS_TO_PULL[@]}"; do
+    if [ -d "$r/.git" ]; then
+        git -C "$r" pull --rebase origin $(git -C "$r" rev-parse --abbrev-ref HEAD 2>/dev/null || echo "lineage-23.2") || true
+    fi
+done
+
 # Fallback clones
 [ ! -d "device/nokia/sdm660-common" ] && git clone --depth=1 -b lineage-23.2 https://github.com/Zoro-15/android_device_nokia_sdm660-common.git device/nokia/sdm660-common
 [ ! -d "device/nokia/PL2" ] && git clone --depth=1 -b lineage-23.2 https://github.com/Zoro-15/android_device_nokia_PL2.git device/nokia/PL2

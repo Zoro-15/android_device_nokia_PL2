@@ -64,14 +64,44 @@ cat << "EOF" > .repo/local_manifests/PL2.xml
 </manifest>
 EOF
 
+# Clean broken Windows-copied git cookie configuration if present
+if git config --global --get http.cookiefile 2>/dev/null | grep -qi "USERPROFILE"; then
+    echo "--> Clearing invalid Windows cookiefile from Linux git config..."
+    git config --global --unset http.cookiefile || true
+fi
+
 # 4. Sync Repositories
 echo "--> Syncing source repositories (ServerHive optimized flags)..."
 set +e
 repo sync -c -j$(nproc --all) --force-sync --no-clone-bundle --no-tags --optimized-fetch --prune
 set -e
 
-# 5. Fallback Clones (Guarantees all 15 repositories exist)
-echo "--> Verifying custom repository checkouts..."
+# 5. Fallback Clones & Fast Updates (Guarantees all 15 repositories exist & are up to date)
+echo "--> Verifying and updating custom repository checkouts..."
+REPOS_TO_PULL=(
+    "device/nokia/sdm660-common"
+    "device/nokia/PL2"
+    "vendor/nokia/sdm660-common"
+    "vendor/nokia/PL2"
+    "kernel/nokia/sdm660"
+    "hardware/qcom-caf/sdm660/audio"
+    "hardware/qcom-caf/sdm660/display"
+    "hardware/qcom-caf/sdm660/media"
+    "device/qcom/sepolicy-legacy-um"
+    "hardware/lineage/compat"
+    "frameworks/native"
+    "system/sepolicy"
+    "external/kotlinx.serialization"
+    "tools/metalava"
+    "vendor/qcom/opensource/display"
+)
+for r in "${REPOS_TO_PULL[@]}"; do
+    if [ -d "$r/.git" ]; then
+        echo "--> Pulling latest changes in $r..."
+        git -C "$r" pull --rebase origin $(git -C "$r" rev-parse --abbrev-ref HEAD 2>/dev/null || echo "lineage-23.2") || true
+    fi
+done
+
 [ ! -d "device/nokia/sdm660-common" ] && git clone --depth=1 -b lineage-23.2 https://github.com/Zoro-15/android_device_nokia_sdm660-common.git device/nokia/sdm660-common
 [ ! -d "device/nokia/PL2" ] && git clone --depth=1 -b lineage-23.2 https://github.com/Zoro-15/android_device_nokia_PL2.git device/nokia/PL2
 [ ! -d "vendor/nokia/sdm660-common" ] && git clone --depth=1 -b lineage-23.2 https://github.com/Zoro-15/proprietary_vendor_nokia_sdm660-common.git vendor/nokia/sdm660-common
@@ -87,6 +117,7 @@ echo "--> Verifying custom repository checkouts..."
 [ ! -d "external/kotlinx.serialization" ] && git clone --depth=1 -b lineage-23.2 https://github.com/Zoro-15/android_external_kotlinx.serialization.git external/kotlinx.serialization
 [ ! -d "tools/metalava" ] && git clone --depth=1 -b lineage-23.2 https://github.com/Zoro-15/android_tools_metalava.git tools/metalava
 [ ! -d "vendor/qcom/opensource/display" ] && git clone --depth=1 -b lineage-23.2 https://github.com/LineageOS/android_vendor_qcom_opensource_display.git vendor/qcom/opensource/display
+
 
 # 6. Ensure Dummy Soong Namespaces
 mkdir -p hardware/qcom-caf/sdm660 hardware/qcom-caf/msm8998
