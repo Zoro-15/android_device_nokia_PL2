@@ -94,7 +94,6 @@ REPOS_TO_SYNC=(
     "system/sepolicy:lineage-23.2"
     "external/kotlinx.serialization:lineage-23.2"
     "tools/metalava:lineage-23.2"
-    "vendor/qcom/opensource/display:lineage-23.2"
 )
 for entry in "${REPOS_TO_SYNC[@]}"; do
     r="${entry%%:*}"
@@ -126,6 +125,9 @@ done
 [ ! -d "external/kotlinx.serialization" ] && git clone --depth=1 -b lineage-23.2 https://github.com/Zoro-15/android_external_kotlinx.serialization.git external/kotlinx.serialization
 [ ! -d "tools/metalava" ] && git clone --depth=1 -b lineage-23.2 https://github.com/Zoro-15/android_tools_metalava.git tools/metalava
 [ ! -d "vendor/qcom/opensource/display" ] && git clone --depth=1 -b lineage-23.2 https://github.com/LineageOS/android_vendor_qcom_opensource_display.git vendor/qcom/opensource/display
+
+# Remove duplicate libqdmetadata from generic display repo (sdm660 uses hardware/qcom-caf/sdm660/display/libqdutils)
+rm -rf vendor/qcom/opensource/display/libqdmetadata
 
 # Soong namespaces
 mkdir -p hardware/qcom-caf/sdm660 hardware/qcom-caf/msm8998
@@ -169,7 +171,7 @@ fi
 # Pre-build cleanup & Soong analysis
 echo "--> Cleaning stale build targets and resetting Ninja graph..."
 make installclean || true
-rm -rf out/soong/system_server_dexjars out/soong/.ninja_deps out/soong/.ninja_log
+rm -rf out/soong/Android-*.mk out/soong/installs-*.mk out/soong/system_server_dexjars out/soong/.ninja_deps out/soong/.ninja_log
 
 echo "--> Verifying Soong analysis..."
 m nothing -j$(nproc --all)
