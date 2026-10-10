@@ -6,6 +6,8 @@ echo "=== Starting LineageOS 23.2 (Android 16) Build for Nokia 6.1 (PL2) ==="
 
 # Environment & Memory Guards
 echo "--> Configuring build environment..."
+unset WITHOUT_CHECK_API
+unset BUILD_FROM_SOURCE_STUB
 export GOMEMLIMIT=12GiB
 export GOGC=50
 export _JAVA_OPTIONS="-Xmx8g"
@@ -176,6 +178,7 @@ fi
 # Pre-build cleanup & Soong analysis
 echo "--> Purging corrupted/stale Ninja graphs and intermediate targets..."
 rm -rf out/*.ninja out/soong/*.ninja out/soong/build.* out/soong/Android-*.mk out/soong/installs-*.mk out/soong/system_server_dexjars out/soong/.ninja_deps out/soong/.ninja_log
+rm -rf out/soong/soong.environment.* out/soong/soong.*.variables out/soong/soong.variables
 rm -rf out/soong/.intermediates/tools/metalava \
        out/soong/.intermediates/frameworks/base/api \
        out/soong/.intermediates/system/sepolicy \
