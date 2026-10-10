@@ -75,14 +75,14 @@ if [ ! -d "hardware/qcom-caf/sm8450/audio/primary-hal" ]; then
     repo sync -l -d hardware/qcom-caf/sm8450/audio/primary-hal 2>/dev/null || true
 fi
 
-# Isolate all non-SDM660 CAF chipset trees into separate soong namespaces so they
-# do not evaluate in the root namespace, while preserving their worktrees for repo manifest
-mkdir -p hardware/qcom-caf/sdm660 hardware/qcom-caf/msm8998 hardware/qcom-caf/sm8450
-for chipset in hardware/qcom-caf/sm* hardware/qcom-caf/sdm845* hardware/qcom-caf/msm8998; do
-    if [ -d "$chipset" ] && [ "$chipset" != "hardware/qcom-caf/sdm660" ]; then
-        echo "soong_namespace {}" > "$chipset/Android.bp"
-    fi
-done
+# Purge all extraneous Android.bp blueprint files inside non-SDM660 chipset trees (sm*, sdm845*)
+# This prevents Soong from parsing broken/unsupported HAL blueprints, while keeping
+# the physical directories and .git worktrees intact on disk for repo manifest.
+echo "--> Purging non-SDM660 Android.bp blueprint files..."
+find hardware/qcom-caf/sm* hardware/qcom-caf/sdm845* -type f -name "Android.bp" -delete 2>/dev/null || true
+
+mkdir -p hardware/qcom-caf/sdm660 hardware/qcom-caf/msm8998
+echo "soong_namespace {}" > hardware/qcom-caf/msm8998/Android.bp
 
 cat << "EOF" > hardware/qcom-caf/sdm660/Android.bp
 soong_namespace {
