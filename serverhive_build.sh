@@ -172,6 +172,10 @@ fi
 echo "--> Cleaning stale build targets..."
 make installclean || true
 rm -rf out/*.ninja out/soong/*.ninja out/soong/build.* out/soong/Android-*.mk out/soong/installs-*.mk out/soong/system_server_dexjars out/soong/.ninja_deps out/soong/.ninja_log
+rm -rf out/soong/.intermediates/tools/metalava \
+       out/soong/.intermediates/frameworks/base/api \
+       out/soong/.intermediates/system/sepolicy \
+       out/soong/.intermediates/hardware/qcom-caf/sdm660
 
 echo "--> Verifying Blueprint/Soong graph analysis..."
 m nothing -j$(nproc --all)
