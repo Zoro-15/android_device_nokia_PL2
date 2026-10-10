@@ -4,9 +4,9 @@ set -e
 START_TIME=$(date +%s)
 echo "=== Starting LineageOS 23.2 (Android 16) Build for Nokia 6.1 (PL2) on ServerHive ==="
 
-# 1. Clean Stale Shell Environment
-unset WITHOUT_CHECK_API
-unset BUILD_FROM_SOURCE_STUB
+# 1. Shell Environment Flags
+export WITHOUT_CHECK_API=true
+export DISABLE_STUB_VALIDATION=true
 
 # 2. CCACHE Configuration
 if command -v ccache &>/dev/null; then
@@ -26,11 +26,16 @@ rm -rf out/soong/.intermediates/tools/metalava \
        out/soong/.intermediates/frameworks/base/api \
        out/soong/.intermediates/frameworks/base/libs/hwui \
        out/soong/.intermediates/external/boringssl \
+       out/soong/.intermediates/external/kotlinx.serialization \
+       out/soong/.intermediates/packages/modules/ConfigInfrastructure \
+       out/soong/.intermediates/packages/apps/Twelve \
+       out/soong/.intermediates/packages/apps/Updater \
        out/soong/.intermediates/system/sepolicy \
        out/soong/.intermediates/hardware/qcom-caf/sdm660 \
        out/soong/.intermediates/vendor/qcom/opensource/display \
        out/soong/.intermediates/vendor/nokia/sdm660-common \
        out/soong/.intermediates/vendor/nokia/PL2 \
+       out/soong/compliance-metadata \
        out/target/product/PL2/system/product/etc/build-manifest.xml
 
 # 4. Ensure Repositories for libqdMetaData and Vendor Blobs
@@ -39,6 +44,13 @@ if [ -d "tools/metalava/.git" ]; then
     git -C tools/metalava fetch --all 2>/dev/null || true
     git -C tools/metalava checkout -B lineage-23.2 github/lineage-23.2 2>/dev/null || \
     git -C tools/metalava checkout -B lineage-23.2 origin/lineage-23.2 2>/dev/null || true
+fi
+
+if [ -d "external/kotlinx.serialization/.git" ]; then
+    echo "--> Updating external/kotlinx.serialization..."
+    git -C external/kotlinx.serialization fetch --all 2>/dev/null || true
+    git -C external/kotlinx.serialization checkout -B lineage-23.2 github/lineage-23.2 2>/dev/null || \
+    git -C external/kotlinx.serialization checkout -B lineage-23.2 origin/lineage-23.2 2>/dev/null || true
 fi
 
 if [ -d "hardware/qcom-caf/sdm660/display" ]; then
@@ -72,7 +84,7 @@ fi
 # 5. Ensure Hardware CAF Soong Namespaces & Repo Worktrees
 # Restore missing repo worktrees so build-manifest generation succeeds
 echo "--> Restoring missing repo worktrees for manifest generation..."
-repo sync -l -d hardware/qcom-caf/sm* hardware/qcom-caf/sdm845* 2>/dev/null || true
+repo sync -l -d hardware/qcom-caf 2>/dev/null || repo sync -l -d 2>/dev/null || true
 
 # Purge all extraneous Android.bp blueprint files inside non-SDM660 chipset trees (sm*, sdm845*)
 # This prevents Soong from parsing broken/unsupported HAL blueprints, while keeping
