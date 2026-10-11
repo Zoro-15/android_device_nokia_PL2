@@ -104,13 +104,19 @@ fi
 # 5. Ensure Hardware CAF Soong Namespaces & Repo Worktrees
 # Restore missing repo worktrees so build-manifest generation succeeds
 echo "--> Restoring missing repo worktrees for manifest generation..."
-repo sync -l -d hardware/qcom-caf 2>/dev/null || repo sync -l -d 2>/dev/null || true
+repo sync -l -d hardware/qcom-caf/sm8450-6.6/audio/primary-hal 2>/dev/null || true
+repo sync -l -d hardware/qcom-caf/sm8450/audio/primary-hal 2>/dev/null || true
 
 # Purge all extraneous Android.bp blueprint files inside non-SDM660 chipset trees (sm*, sdm845*)
 # This prevents Soong from parsing broken/unsupported HAL blueprints, while keeping
 # the physical directories and .git worktrees intact on disk for repo manifest.
 echo "--> Purging non-SDM660 Android.bp blueprint files..."
 find hardware/qcom-caf/sm* hardware/qcom-caf/sdm845* -type f -name "Android.bp" -delete 2>/dev/null || true
+
+# Guarantee obsolete sepolicy files and caches are deleted
+rm -f device/nokia/sdm660-common/sepolicy/vendor/hvdcp.te
+rm -f device/nokia/sdm660-common/sepolicy/vendor/hal_imsrtp.te
+rm -rf out/soong/.intermediates/system/sepolicy
 
 mkdir -p hardware/qcom-caf/sdm660 hardware/qcom-caf/msm8998
 echo "soong_namespace {}" > hardware/qcom-caf/msm8998/Android.bp
