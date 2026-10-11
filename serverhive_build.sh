@@ -70,9 +70,10 @@ if [ -e "device/nokia/sdm660-common/.git" ] || [ -d "device/nokia/sdm660-common"
     echo "--> Updating device/nokia/sdm660-common..."
     git -C device/nokia/sdm660-common remote add zoro https://github.com/Zoro-15/android_device_nokia_sdm660-common.git 2>/dev/null || \
     git -C device/nokia/sdm660-common remote set-url zoro https://github.com/Zoro-15/android_device_nokia_sdm660-common.git 2>/dev/null || true
-    git -C device/nokia/sdm660-common fetch zoro lineage-23.2 2>/dev/null || true
-    git -C device/nokia/sdm660-common checkout -B lineage-23.2 zoro/lineage-23.2 2>/dev/null || true
-    git -C device/nokia/sdm660-common reset --hard zoro/lineage-23.2 2>/dev/null || true
+    git -C device/nokia/sdm660-common fetch zoro lineage-23.2 || true
+    git -C device/nokia/sdm660-common checkout -B lineage-23.2 zoro/lineage-23.2 || true
+    git -C device/nokia/sdm660-common reset --hard zoro/lineage-23.2 || true
+    rm -f device/nokia/sdm660-common/sepolicy/vendor/hvdcp.te
 fi
 
 if [ -e "vendor/nokia/sdm660-common/.git" ] || [ -d "vendor/nokia/sdm660-common" ]; then
