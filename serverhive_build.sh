@@ -39,44 +39,58 @@ rm -rf out/soong/.intermediates/tools/metalava \
        out/target/product/PL2/system/product/etc/build-manifest.xml
 
 # 4. Ensure Repositories for libqdMetaData and Vendor Blobs
-if [ -d "tools/metalava/.git" ]; then
+if [ -e "tools/metalava/.git" ] || [ -d "tools/metalava" ]; then
     echo "--> Updating tools/metalava..."
     git -C tools/metalava remote add zoro https://github.com/Zoro-15/android_tools_metalava.git 2>/dev/null || \
     git -C tools/metalava remote set-url zoro https://github.com/Zoro-15/android_tools_metalava.git 2>/dev/null || true
     git -C tools/metalava fetch zoro lineage-23.2 2>/dev/null || true
     git -C tools/metalava checkout -B lineage-23.2 zoro/lineage-23.2 2>/dev/null || true
+    git -C tools/metalava reset --hard zoro/lineage-23.2 2>/dev/null || true
 fi
 
-if [ -d "external/kotlinx.serialization/.git" ]; then
+if [ -e "external/kotlinx.serialization/.git" ] || [ -d "external/kotlinx.serialization" ]; then
     echo "--> Updating external/kotlinx.serialization..."
     git -C external/kotlinx.serialization remote add zoro https://github.com/Zoro-15/android_external_kotlinx.serialization.git 2>/dev/null || \
     git -C external/kotlinx.serialization remote set-url zoro https://github.com/Zoro-15/android_external_kotlinx.serialization.git 2>/dev/null || true
     git -C external/kotlinx.serialization fetch zoro lineage-23.2 2>/dev/null || true
     git -C external/kotlinx.serialization checkout -B lineage-23.2 zoro/lineage-23.2 2>/dev/null || true
+    git -C external/kotlinx.serialization reset --hard zoro/lineage-23.2 2>/dev/null || true
 fi
 
-if [ -d "hardware/qcom-caf/sdm660/display" ]; then
+if [ -e "hardware/qcom-caf/sdm660/display/.git" ] || [ -d "hardware/qcom-caf/sdm660/display" ]; then
     echo "--> Updating hardware/qcom-caf/sdm660/display..."
     git -C hardware/qcom-caf/sdm660/display remote add zoro https://github.com/Zoro-15/android_hardware_qcom_display.git 2>/dev/null || \
     git -C hardware/qcom-caf/sdm660/display remote set-url zoro https://github.com/Zoro-15/android_hardware_qcom_display.git 2>/dev/null || true
     git -C hardware/qcom-caf/sdm660/display fetch zoro lineage-23.2-caf-msm8953 2>/dev/null || true
     git -C hardware/qcom-caf/sdm660/display checkout -B lineage-23.2-caf-msm8953 zoro/lineage-23.2-caf-msm8953 2>/dev/null || true
+    git -C hardware/qcom-caf/sdm660/display reset --hard zoro/lineage-23.2-caf-msm8953 2>/dev/null || true
 fi
 
-if [ -d "device/nokia/sdm660-common/.git" ]; then
+if [ -e "device/nokia/sdm660-common/.git" ] || [ -d "device/nokia/sdm660-common" ]; then
     echo "--> Updating device/nokia/sdm660-common..."
     git -C device/nokia/sdm660-common remote add zoro https://github.com/Zoro-15/android_device_nokia_sdm660-common.git 2>/dev/null || \
     git -C device/nokia/sdm660-common remote set-url zoro https://github.com/Zoro-15/android_device_nokia_sdm660-common.git 2>/dev/null || true
     git -C device/nokia/sdm660-common fetch zoro lineage-23.2 2>/dev/null || true
     git -C device/nokia/sdm660-common checkout -B lineage-23.2 zoro/lineage-23.2 2>/dev/null || true
+    git -C device/nokia/sdm660-common reset --hard zoro/lineage-23.2 2>/dev/null || true
 fi
 
-if [ -d "vendor/nokia/PL2/.git" ]; then
+if [ -e "vendor/nokia/sdm660-common/.git" ] || [ -d "vendor/nokia/sdm660-common" ]; then
+    echo "--> Updating vendor/nokia/sdm660-common..."
+    git -C vendor/nokia/sdm660-common remote add zoro https://github.com/Zoro-15/proprietary_vendor_nokia_sdm660-common.git 2>/dev/null || \
+    git -C vendor/nokia/sdm660-common remote set-url zoro https://github.com/Zoro-15/proprietary_vendor_nokia_sdm660-common.git 2>/dev/null || true
+    git -C vendor/nokia/sdm660-common fetch zoro lineage-23.2 2>/dev/null || true
+    git -C vendor/nokia/sdm660-common checkout -B lineage-23.2 zoro/lineage-23.2 2>/dev/null || true
+    git -C vendor/nokia/sdm660-common reset --hard zoro/lineage-23.2 2>/dev/null || true
+fi
+
+if [ -e "vendor/nokia/PL2/.git" ] || [ -d "vendor/nokia/PL2" ]; then
     echo "--> Updating vendor/nokia/PL2..."
     git -C vendor/nokia/PL2 remote add zoro https://github.com/Zoro-15/proprietary_vendor_nokia_PL2.git 2>/dev/null || \
     git -C vendor/nokia/PL2 remote set-url zoro https://github.com/Zoro-15/proprietary_vendor_nokia_PL2.git 2>/dev/null || true
     git -C vendor/nokia/PL2 fetch zoro lineage-23.2 2>/dev/null || true
     git -C vendor/nokia/PL2 checkout -B lineage-23.2 zoro/lineage-23.2 2>/dev/null || true
+    git -C vendor/nokia/PL2 reset --hard zoro/lineage-23.2 2>/dev/null || true
 fi
 
 if [ ! -d "vendor/qcom/opensource/commonsys-intf/display" ]; then
