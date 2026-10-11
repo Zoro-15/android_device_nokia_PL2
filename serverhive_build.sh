@@ -26,6 +26,8 @@ rm -rf out/soong/.intermediates/tools/metalava \
        out/soong/.intermediates/frameworks/base/api \
        out/soong/.intermediates/frameworks/base/libs/hwui \
        out/soong/.intermediates/external/boringssl \
+       out/soong/.intermediates/external/libchrome \
+       out/soong/.intermediates/frameworks/base/core/jni/libandroid_runtime \
        out/soong/.intermediates/external/kotlinx.serialization \
        out/soong/.intermediates/packages/modules/ConfigInfrastructure \
        out/soong/.intermediates/packages/apps/Twelve \
