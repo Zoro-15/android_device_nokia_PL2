@@ -44,8 +44,8 @@ TARGET_KERNEL_ADDITIONAL_FLAGS := \
     KAFLAGS="-gdwarf-4" \
     CLANG_TRIPLE=aarch64-linux-gnu-
 
-# SELinux (Permissive for initial bringup validation)
-BOARD_KERNEL_CMDLINE += androidboot.selinux=permissive
+# SELinux & Debugging
+BOARD_KERNEL_CMDLINE += androidboot.selinux=permissive debug.fdsan=warn
 
 # Partitions
 BOARD_SYSTEMIMAGE_PARTITION_SIZE := 3221225472

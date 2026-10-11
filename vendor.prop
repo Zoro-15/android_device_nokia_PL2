@@ -14,3 +14,9 @@ ro.hardware.fingerprint=elan
 
 # Radio
 ro.rf.power.reduction.for.mcc=1
+
+# Bringup Debugging & Always-On ADB
+debug.fdsan=warn
+ro.adb.secure=0
+persist.sys.usb.config=adb
+sys.usb.config=adb
