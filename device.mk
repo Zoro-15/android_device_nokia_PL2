@@ -85,5 +85,9 @@ PRODUCT_SOONG_NAMESPACES += \
 PRODUCT_APEX_SYSTEM_SERVER_JARS += \
     com.android.crashrecovery:service-crashrecovery
 
+# Recovery UI / Bionic FDSAN compatibility
+PRODUCT_PROPERTY_OVERRIDES += \
+    debug.fdsan=warn
+
 # Inherit from nokia sdm660-common
 $(call inherit-product, device/nokia/sdm660-common/common.mk)
