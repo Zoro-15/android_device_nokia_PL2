@@ -15,11 +15,19 @@
 #
 
 PRODUCT_MAKEFILES := \
+    $(LOCAL_DIR)/arrow_PL2.mk \
+    $(LOCAL_DIR)/du_PL2.mk \
     $(LOCAL_DIR)/nad_PL2.mk \
     $(LOCAL_DIR)/qassa_PL2.mk \
     $(LOCAL_DIR)/lineage_PL2.mk
 
 COMMON_LUNCH_CHOICES := \
+    arrow_PL2-userdebug \
+    arrow_PL2-user \
+    arrow_PL2-eng \
+    du_PL2-userdebug \
+    du_PL2-user \
+    du_PL2-eng \
     nad_PL2-userdebug \
     nad_PL2-user \
     nad_PL2-eng \
