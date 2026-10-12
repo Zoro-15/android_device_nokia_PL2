@@ -15,6 +15,7 @@
 #
 
 PRODUCT_MAKEFILES := \
+    $(LOCAL_DIR)/pa_PL2.mk \
     $(LOCAL_DIR)/arrow_PL2.mk \
     $(LOCAL_DIR)/du_PL2.mk \
     $(LOCAL_DIR)/nad_PL2.mk \
@@ -22,6 +23,9 @@ PRODUCT_MAKEFILES := \
     $(LOCAL_DIR)/lineage_PL2.mk
 
 COMMON_LUNCH_CHOICES := \
+    pa_PL2-userdebug \
+    pa_PL2-user \
+    pa_PL2-eng \
     arrow_PL2-userdebug \
     arrow_PL2-user \
     arrow_PL2-eng \
