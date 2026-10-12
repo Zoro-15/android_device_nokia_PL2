@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<manifest>
+  <remote name="zoro" fetch="https://github.com/Zoro-15" revision="lineage-17.1" />
+
+  <project path="device/nokia/PL2" name="android_device_nokia_PL2" remote="zoro" />
+  <project path="device/nokia/sdm660-common" name="android_device_nokia_sdm660-common" remote="zoro" />
+  <project path="kernel/nokia/sdm660" name="android_kernel_nokia_sdm660" remote="zoro" />
+  <project path="vendor/nokia" name="proprietary_vendor_nokia" remote="zoro" />
+</manifest>
