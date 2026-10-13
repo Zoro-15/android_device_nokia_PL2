@@ -113,53 +113,16 @@ make installclean
 echo "--> Compiling ArrowOS 10.0 target image..."
 mka arrow -j$(nproc --all) || mka bacon -j$(nproc --all)
 
-# ==============================================================================
-# PHASE 6: ARTIFACT DISCOVERY, CHECKSUM & CLOUD UPLOAD
-# ==============================================================================
-echo "========================================================"
-echo "--> Locating ROM flashable artifact..."
-echo "========================================================"
 
-PRODUCT_OUT="$PWD/out/target/product/PL2"
-if [ ! -d "$PRODUCT_OUT" ]; then
-    echo "ERROR: Product output directory not found: $PRODUCT_OUT"
+echo "========================================================"
+echo "Uploading artifact to temp.sh..."
+TEMP_URL=$(curl --fail --silent --show-error --max-time 1800 \
+    -F "file=@${ROM_ZIP}" https://temp.sh/upload 2>&1) || {
+    echo "ERROR: temp.sh upload failed"
+    echo "$TEMP_URL"
     exit 1
-fi
-
-ROM_ZIP=$(find "$PRODUCT_OUT" -maxdepth 1 -type f -name "*.zip" \
-    ! -name "*ota*" \
-    ! -name "*OTA*" \
-    ! -name "*target_files*" \
-    ! -name "*.json" \
-    ! -name "*.sha256sum" \
-    -printf "%T@ %p\n" 2>/dev/null \
-    | sort -n \
-    | tail -1 \
-    | cut -d' ' -f2-)
-
-if [ -z "$ROM_ZIP" ] || [ ! -f "$ROM_ZIP" ]; then
-    ROM_ZIP=$(find "$PRODUCT_OUT" -maxdepth 1 -type f -name "*.zip" \
-        ! -name "*.json" \
-        ! -name "*.sha256sum" \
-        -printf "%T@ %p\n" 2>/dev/null \
-        | sort -n \
-        | tail -1 \
-        | cut -d' ' -f2-)
-fi
-
-if [ -z "$ROM_ZIP" ] || [ ! -f "$ROM_ZIP" ]; then
-    echo "ERROR: No ROM ZIP found in $PRODUCT_OUT"
-    find "$PRODUCT_OUT" -maxdepth 1 -type f -printf '%f\n' | sort
-    exit 1
-fi
-
-echo "Found output ZIP: $ROM_ZIP"
-echo "Generating SHA256 checksum..."
-sha256sum "$ROM_ZIP" | tee "${ROM_ZIP}.sha256sum"
-
-echo "========================================================"
-echo "Uploading artifact to BashUpload..."
-curl -s bashupload.com -T "$ROM_ZIP"
-echo ""
+}
+echo "$TEMP_URL"
+echo "$TEMP_URL" > "${ROM_ZIP}.temp.sh.url"
 echo "========================================================"
 echo "=== ArrowOS 10.0 Build Finished Successfully! ==="
