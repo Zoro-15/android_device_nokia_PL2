@@ -22,12 +22,17 @@ $(call inherit-product, device/nokia/PL2/device.mk)
 
 # Nusantara Spec Flags
 WITH_GAPPS := false
+USE_GAPPS := false
 TARGET_SCREEN_HEIGHT := 1920
 TARGET_SCREEN_WIDTH := 1080
 TARGET_BOOT_ANIMATION_RES := 1080
 PRODUCT_AAPT_CONFIG := normal
 PRODUCT_AAPT_PREF_CONFIG := xxhdpi
 TARGET_OTA_ASSERT_DEVICE := PL2,PL2_sprout,Plate2
+
+# Ensure Launcher is included in Vanilla build
+PRODUCT_PACKAGES += \
+    Launcher3QuickStep
 
 PRODUCT_NAME := nad_PL2
 PRODUCT_DEVICE := PL2
@@ -40,7 +45,8 @@ NAD_MAINTAINER := Zoro-15
 PRODUCT_PROPERTY_OVERRIDES += \
     ro.nad.maintainer=Zoro-15 \
     ro.lineage.maintainer=Zoro-15 \
-    ro.build.maintainer=Zoro-15
+    ro.build.maintainer=Zoro-15 \
+    ro.setupwizard.mode=DISABLED
 
 PRODUCT_BUILD_PROP_OVERRIDES += \
     PRODUCT_DEVICE=PL2_sprout \
