@@ -164,7 +164,7 @@ set +e
 
 # Primary: temp.sh
 TEMP_URL=$(
-    curl --fail --silent --show-error --max-time 300 \
+    curl --fail --silent --show-error --max-time 1800 \
         -F "file=@${ROM_ZIP}" \
         https://temp.sh/upload 2>/dev/null
 )
@@ -172,18 +172,18 @@ TEMP_URL=$(
 # Secondary Fallback: bashupload.com
 if [ -z "$TEMP_URL" ]; then
     echo "--> temp.sh timed out or failed; trying bashupload.com fallback..."
-    TEMP_URL=$(curl --fail --silent --show-error --max-time 300 bashupload.com -T "${ROM_ZIP}" 2>/dev/null)
+    TEMP_URL=$(curl --fail --silent --show-error --max-time 600 bashupload.com -T "${ROM_ZIP}" 2>/dev/null)
 fi
 
 set -e
 
 if [ -n "$TEMP_URL" ]; then
     echo "$TEMP_URL" | tee "$TEMP_URL_FILE"
+    echo "$TEMP_URL" > "${ROM_ZIP}.temp.sh.url"
 
     echo
     echo "========================================================"
-    echo "--> DOWNLOAD URL"
-    echo "========================================================"
+    echo "--> DOWNLOAD URL:"
     echo "$TEMP_URL"
     echo "========================================================"
 else

@@ -153,13 +153,67 @@ if [ -z "$ROM_ZIP" ] || [ ! -f "$ROM_ZIP" ]; then
     exit 1
 fi
 
-echo "Found output ZIP: $ROM_ZIP"
-echo "Generating SHA256 checksum..."
-sha256sum "$ROM_ZIP" | tee "${ROM_ZIP}.sha256sum"
+ROM_NAME="$(basename "$ROM_ZIP")"
+echo "--> ROM found: $ROM_NAME"
+ls -lh "$ROM_ZIP"
 
+SHA_FILE="${ROM_ZIP}.sha256sum"
+sha256sum "$ROM_ZIP" > "$SHA_FILE"
+echo "--> SHA-256:"
+cat "$SHA_FILE"
+
+# --------------------------------------------------------
+# Upload ROM to temp.sh (with bashupload fallback)
+# --------------------------------------------------------
+echo
 echo "========================================================"
-echo "Uploading artifact to BashUpload..."
-curl -s bashupload.com -T "$ROM_ZIP"
-echo ""
+echo "--> Uploading ROM artifact to temp.sh..."
+echo "========================================================"
+
+TEMP_URL_FILE="$PRODUCT_OUT/${ROM_NAME}.download-url.txt"
+
+set +e
+
+# Primary: temp.sh
+TEMP_URL=$(
+    curl --fail --silent --show-error --max-time 1800 \
+        -F "file=@${ROM_ZIP}" \
+        https://temp.sh/upload 2>/dev/null
+)
+
+# Secondary Fallback: bashupload.com
+if [ -z "$TEMP_URL" ]; then
+    echo "--> temp.sh timed out or failed; trying bashupload.com fallback..."
+    TEMP_URL=$(curl --fail --silent --show-error --max-time 600 bashupload.com -T "${ROM_ZIP}" 2>/dev/null)
+fi
+
+set -e
+
+if [ -n "$TEMP_URL" ]; then
+    echo "$TEMP_URL" | tee "$TEMP_URL_FILE"
+    echo "$TEMP_URL" > "${ROM_ZIP}.temp.sh.url"
+
+    echo
+    echo "========================================================"
+    echo "--> DOWNLOAD URL:"
+    echo "$TEMP_URL"
+    echo "========================================================"
+else
+    echo
+    echo "WARNING: Cloud uploads failed or timed out."
+    echo "The ROM build itself is 100% SUCCESSFUL."
+    echo "Retrieve the file from devspace using: crave pull out/target/product/PL2/*.zip"
+fi
+
+# --------------------------------------------------------
+# Final artifact summary
+# --------------------------------------------------------
+echo
+echo "========================================================"
+echo "BUILD ARTIFACT SUMMARY"
+echo "========================================================"
+echo "ROM:      $ROM_ZIP"
+echo "SHA256:   $SHA_FILE"
+echo "URL FILE: $TEMP_URL_FILE"
 echo "========================================================"
 echo "=== Dirty Unicorns Build Finished Successfully! ==="
