@@ -161,23 +161,14 @@ echo "========================================================"
 TEMP_URL_FILE="$PRODUCT_OUT/${ROM_NAME}.download-url.txt"
 
 set +e
-
-# Primary: temp.sh
 TEMP_URL=$(
     curl --fail --silent --show-error --max-time 1800 \
         -F "file=@${ROM_ZIP}" \
         https://temp.sh/upload 2>/dev/null
 )
-
-# Secondary Fallback: bashupload.com
-if [ -z "$TEMP_URL" ]; then
-    echo "--> temp.sh timed out or failed; trying bashupload.com fallback..."
-    TEMP_URL=$(curl --fail --silent --show-error --max-time 600 bashupload.com -T "${ROM_ZIP}" 2>/dev/null)
-fi
-
 set -e
 
-if [ -n "$TEMP_URL" ]; then
+if [ -n "$TEMP_URL" ] && [[ "$TEMP_URL" == *"http"* ]]; then
     echo "$TEMP_URL" | tee "$TEMP_URL_FILE"
     echo "$TEMP_URL" > "${ROM_ZIP}.temp.sh.url"
 
@@ -188,7 +179,7 @@ if [ -n "$TEMP_URL" ]; then
     echo "========================================================"
 else
     echo
-    echo "WARNING: Cloud uploads failed or timed out."
+    echo "WARNING: temp.sh upload failed or timed out."
     echo "The ROM build itself is 100% SUCCESSFUL."
     echo "Retrieve the file from devspace using: crave pull out/target/product/PL2/*.zip"
 fi
