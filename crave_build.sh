@@ -14,7 +14,7 @@ set -e
 # ==============================================================================
 
 TARGET_ROM="${1:-qassa}"
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")" 2>/dev/null && pwd)"
 
 case "$TARGET_ROM" in
     qassa)
@@ -67,4 +67,10 @@ case "$TARGET_ROM" in
         ;;
 esac
 
-exec bash "$SCRIPT_DIR/crave_common.sh"
+COMMON_SCRIPT="$SCRIPT_DIR/crave_common.sh"
+if [ ! -f "$COMMON_SCRIPT" ]; then
+    COMMON_SCRIPT="/tmp/crave_common.sh"
+    curl -sL "https://raw.githubusercontent.com/Zoro-15/android_device_nokia_PL2/lineage-17.1/crave_common.sh" -o "$COMMON_SCRIPT"
+fi
+
+exec bash "$COMMON_SCRIPT"
