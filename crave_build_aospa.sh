@@ -32,7 +32,7 @@ export BUILD_USERNAME=Zoro-15 BUILD_HOSTNAME=crave
 # PHASE 2: PRE-FLIGHT CLEANUP (SAFE FOR CRAVE)
 # ==============================================================================
 echo "--> Cleaning stale local manifests and device trees..."
-rm -rf .repo/local_manifests device/nokia/PL2 device/nokia/sdm660-common kernel/nokia/sdm660 vendor/nokia
+rm -rf .repo/local_manifests device/nokia/PL2 device/nokia/sdm660-common kernel/nokia/sdm660 vendor/nokia vendor/dolby .repo/projects/vendor/dolby.git .repo/project-objects/*dolby*
 
 # Clean stale git hooks across repos to avoid sync divergence
 find .repo/projects/ -type d -name "hooks" -exec rm -rf {} + 2>/dev/null || true
