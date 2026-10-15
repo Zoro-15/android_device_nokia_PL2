@@ -33,7 +33,7 @@ export BUILD_USERNAME=Zoro-15 BUILD_HOSTNAME=crave
 # PHASE 2: PRE-FLIGHT CLEANUP (SAFE FOR CRAVE)
 # ==============================================================================
 echo "--> Cleaning stale local manifests and device trees..."
-rm -rf .repo/local_manifests device/nokia/PL2 device/nokia/sdm660-common kernel/nokia/sdm660 vendor/nokia vendor/dolby
+rm -rf .repo/local_manifests device/nokia/PL2 device/nokia/sdm660-common kernel/nokia/sdm660 vendor/nokia
 
 # Clean stale git hooks across repos to avoid sync divergence
 find .repo/projects/ -type d -name "hooks" -exec rm -rf {} + 2>/dev/null || true
@@ -55,12 +55,11 @@ else
 <?xml version="1.0" encoding="UTF-8"?>
 <manifest>
   <remote name="zoro" fetch="https://github.com/Zoro-15" revision="lineage-17.1"/>
-  <remote name="gh" fetch="https://github.com"/>
   <project path="device/nokia/PL2" name="android_device_nokia_PL2" remote="zoro"/>
   <project path="device/nokia/sdm660-common" name="android_device_nokia_sdm660-common" remote="zoro"/>
   <project path="kernel/nokia/sdm660" name="android_kernel_nokia_sdm660" remote="zoro"/>
   <project path="vendor/nokia" name="proprietary_vendor_nokia" remote="zoro"/>
-  <project path="vendor/dolby" name="TheScarastic/android_vendor_dolby" remote="gh" revision="lineage-17.1"/>
+  <project path="vendor/dolby" name="android_vendor_dolby" remote="zoro"/>
 </manifest>
 XML
 fi
@@ -74,7 +73,7 @@ repo sync -c --force-sync --force-remove-dirty --no-tags --no-clone-bundle --pru
 [ ! -d "device/nokia/sdm660-common" ] && git clone --depth=1 -b lineage-17.1 https://github.com/Zoro-15/android_device_nokia_sdm660-common.git device/nokia/sdm660-common
 [ ! -d "kernel/nokia/sdm660" ] && git clone --depth=1 -b lineage-17.1 https://github.com/Zoro-15/android_kernel_nokia_sdm660.git kernel/nokia/sdm660
 [ ! -d "vendor/nokia" ] && git clone --depth=1 -b lineage-17.1 https://github.com/Zoro-15/proprietary_vendor_nokia.git vendor/nokia
-[ ! -d "vendor/dolby" ] && git clone --depth=1 -b lineage-17.1 https://github.com/TheScarastic/android_vendor_dolby.git vendor/dolby
+[ ! -d "vendor/dolby" ] && git clone --depth=1 -b lineage-17.1 https://github.com/Zoro-15/android_vendor_dolby.git vendor/dolby
 
 # Generate nad_PL2.mk & update AndroidProducts.mk fallback if missing
 if [ ! -f "device/nokia/PL2/nad_PL2.mk" ]; then
