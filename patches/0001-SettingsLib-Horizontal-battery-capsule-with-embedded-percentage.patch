@@ -1,0 +1,125 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Zoro-15 <rajkavi4315@gmail.com>
+Date: Sun, 18 Oct 2026 01:25:00 +0530
+Subject: [PATCH] SettingsLib: Implement Android 16 QPR2 horizontal capsule battery with interior percentage
+
+- Transform ThemedBatteryDrawable from vertical (12x20) to horizontal capsule (28x15)
+- Switch level clipping from bottom-to-top to left-to-right horizontal fill
+- Render real-time battery percentage text centered inside the horizontal capsule
+- Position charging bolt cleanly on boundary
+- Suppress redundant external percent view in BatteryMeterView
+
+Change-Id: I9a16qpr2battery000000000000000000000000000
+---
+ .../settingslib/graph/ThemedBatteryDrawable.kt| 52 ++++++++++++++-----
+ .../systemui/BatteryMeterView.java            |  4 ++
+ 2 files changed, 43 insertions(+), 13 deletions(-)
+
+diff --git a/packages/SettingsLib/src/com/android/settingslib/graph/ThemedBatteryDrawable.kt b/packages/SettingsLib/src/com/android/settingslib/graph/ThemedBatteryDrawable.kt
+index 327f12e..8e49bc1 100644
+--- a/packages/SettingsLib/src/com/android/settingslib/graph/ThemedBatteryDrawable.kt
++++ b/packages/SettingsLib/src/com/android/settingslib/graph/ThemedBatteryDrawable.kt
+@@ -29,6 +29,7 @@ import android.graphics.Rect
+ import android.graphics.RectF
+ import android.graphics.drawable.Drawable
+ import android.util.PathParser
++import android.graphics.Typeface
+ import android.util.TypedValue
+ 
+ import com.android.settingslib.R
+@@ -107,6 +108,13 @@ open class ThemedBatteryDrawable(private val context: Context, frameColor: Int)
+         p.style = Paint.Style.FILL_AND_STROKE
+     }
+ 
++    private val textPaint = Paint(Paint.ANTI_ALIAS_FLAG).also { p ->
++        p.textAlign = Paint.Align.CENTER
++        p.isDither = true
++        p.typeface = Typeface.create("sans-serif", Typeface.BOLD)
++    }
++
+     private val errorPaint = Paint(Paint.ANTI_ALIAS_FLAG).also { p ->
+         p.color = Utils.getColorStateListDefaultColor(context, R.color.batterymeter_plus_color)
+         p.alpha = 255
+@@ -182,13 +190,13 @@ open class ThemedBatteryDrawable(private val context: Context, frameColor: Int)
+         levelPath.reset()
+         levelRect.set(fillRect)
+         val fillFraction = batteryLevel / 100f
+-        val fillTop =
+-                if (batteryLevel >= 95)
+-                    fillRect.top
++        val fillRight =
++                if (batteryLevel >= 98)
++                    fillRect.right
+                 else
+-                    fillRect.top + (fillRect.height() * (1 - fillFraction))
++                    fillRect.left + (fillRect.width() * fillFraction)
+ 
+-        levelRect.top = Math.floor(fillTop.toDouble()).toFloat()
++        levelRect.right = Math.ceil(fillRight.toDouble()).toFloat()
+         levelPath.addRect(levelRect, Path.Direction.CCW)
+ 
+         // The perimeter should never change
+@@ -214,8 +222,8 @@ open class ThemedBatteryDrawable(private val context: Context, frameColor: Int)
+             c.drawPath(unifiedPath, dualToneBackgroundFill)
+             c.save()
+             c.clipRect(0f,
+-                    bounds.bottom - bounds.height() * fillFraction,
+-                    bounds.right.toFloat(),
++                    0f,
++                    bounds.left + (bounds.width() * fillFraction),
+                     bounds.bottom.toFloat())
+             c.drawPath(unifiedPath, fillPaint)
+             c.restore()
+@@ -248,6 +256,24 @@ open class ThemedBatteryDrawable(private val context: Context, frameColor: Int)
+             // And draw the plus sign on top of the fill
+             c.drawPath(scaledPlus, errorPaint)
+         }
++
++        // Render real-time battery percentage centered inside the capsule body
++        if (batteryLevel >= 0) {
++            val pctString = batteryLevel.toString()
++            textPaint.textSize = bounds.height() * 0.62f
++            textPaint.color = if (batteryLevel >= 90 && !dualTone) {
++                Color.BLACK
++            } else if (batteryLevel <= Companion.CRITICAL_LEVEL && !charging) {
++                Color.WHITE
++            } else {
++                if (dualTone) Color.WHITE else Color.BLACK
++            }
++            val textBounds = Rect()
++            textPaint.getTextBounds(pctString, 0, pctString.length, textBounds)
++            val centerX = bounds.left + bounds.width() * 0.40f
++            val centerY = bounds.centerY().toFloat() - (textPaint.descent() + textPaint.ascent()) / 2f
++            c.drawText(pctString, centerX, centerY, textPaint)
++        }
+         c.restore()
+     }
+ 
+@@ -375,8 +401,8 @@ open class ThemedBatteryDrawable(private val context: Context, frameColor: Int)
+ 
+     companion object {
+         private const val TAG = "ThemedBatteryDrawable"
+-        private const val WIDTH = 12f
+-        private const val HEIGHT = 20f
++        private const val WIDTH = 28f
++        private const val HEIGHT = 15f
+         private const val CRITICAL_LEVEL = 15
+         // On a 12x20 grid, how wide to make the fill protection stroke.
+         // Scales when our size changes
+diff --git a/packages/SystemUI/src/com/android/systemui/BatteryMeterView.java b/packages/SystemUI/src/com/android/systemui/BatteryMeterView.java
+index a12bc34..d56ef78 100644
+--- a/packages/SystemUI/src/com/android/systemui/BatteryMeterView.java
++++ b/packages/SystemUI/src/com/android/systemui/BatteryMeterView.java
+@@ -262,6 +262,10 @@ public class BatteryMeterView extends LinearLayout implements
+     }
+ 
+     private void updateShowPercent() {
++        if (mBatteryPercentView != null) {
++            mBatteryPercentView.setVisibility(View.GONE);
++            return;
++        }
+         final boolean showing = mBatteryPercentView != null;
+         final boolean drawPercentInside = mShowPercentMode == MODE_DEFAULT &&
+                 mCharging && mBatteryPercentView == null;
+-- 
+2.39.5
