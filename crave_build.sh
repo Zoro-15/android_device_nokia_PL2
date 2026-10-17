@@ -59,7 +59,6 @@ else
   <project path="device/nokia/sdm660-common" name="android_device_nokia_sdm660-common" remote="zoro"/>
   <project path="kernel/nokia/sdm660" name="android_kernel_nokia_sdm660" remote="zoro"/>
   <project path="vendor/nokia" name="proprietary_vendor_nokia" remote="zoro"/>
-  <project path="vendor/dolby" name="android_vendor_dolby" remote="zoro"/>
 </manifest>
 XML
 fi
@@ -73,7 +72,6 @@ repo sync -c --force-sync --force-remove-dirty --no-tags --no-clone-bundle --pru
 [ ! -d "device/nokia/sdm660-common" ] && git clone --depth=1 -b lineage-17.1 https://github.com/Zoro-15/android_device_nokia_sdm660-common.git device/nokia/sdm660-common
 [ ! -d "kernel/nokia/sdm660" ] && git clone --depth=1 -b lineage-17.1 https://github.com/Zoro-15/android_kernel_nokia_sdm660.git kernel/nokia/sdm660
 [ ! -d "vendor/nokia" ] && git clone --depth=1 -b lineage-17.1 https://github.com/Zoro-15/proprietary_vendor_nokia.git vendor/nokia
-[ ! -d "vendor/dolby" ] && git clone --depth=1 -b lineage-17.1 https://github.com/Zoro-15/android_vendor_dolby.git vendor/dolby
 
 # Legacy ncurses dependencies for Android 10 host tools
 if [ ! -f /usr/lib/x86_64-linux-gnu/libncurses.so.5 ] || [ ! -f /usr/lib/x86_64-linux-gnu/libtinfo.so.5 ]; then

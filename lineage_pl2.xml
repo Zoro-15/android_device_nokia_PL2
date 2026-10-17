@@ -6,5 +6,4 @@
   <project path="device/nokia/sdm660-common" name="android_device_nokia_sdm660-common" remote="zoro" />
   <project path="kernel/nokia/sdm660" name="android_kernel_nokia_sdm660" remote="zoro" />
   <project path="vendor/nokia" name="proprietary_vendor_nokia" remote="zoro" />
-  <project path="vendor/dolby" name="android_vendor_dolby" remote="zoro" />
 </manifest>
