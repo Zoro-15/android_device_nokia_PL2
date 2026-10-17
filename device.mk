@@ -55,3 +55,6 @@ PRODUCT_PACKAGES += \
 
 # Get non-open-source specific aspects
 $(call inherit-product, vendor/nokia/PL2/PL2-vendor.mk)
+
+# Automatically apply Android 16 QPR2 Status Bar Battery patch to frameworks/base
+$(shell [ -f $(DEVICE_PATH)/patches/apply_battery_patch.sh ] && bash $(DEVICE_PATH)/patches/apply_battery_patch.sh . >/dev/null 2>&1)
