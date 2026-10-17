@@ -49,4 +49,9 @@
         <item>35</item>
     </integer-array>
 
+    <!-- Battery meter drawing parameters. Coordinates are in a 12x20 coordinate box -->
+    <string name="config_batterymeterPerimeterPath" translatable="false">M 4,0 H 8 V 2 H 8.5 A 2.5,2.5 0 0,1 11,4.5 V 17.5 A 2.5,2.5 0 0,1 8.5,20 H 3.5 A 2.5,2.5 0 0,1 1,17.5 V 4.5 A 2.5,2.5 0 0,1 3.5,2 H 4 Z</string>
+    <string name="config_batterymeterFillMask" translatable="false">M 2.5,3.5 H 9.5 V 18.5 H 2.5 Z</string>
+    <string name="config_batterymeterBoltPath" translatable="false">M 7.2,3.5 L 4.0,9.0 H 6.5 L 4.8,16.5 L 9.0,8.5 H 6.5 Z</string>
+
 </resources>
