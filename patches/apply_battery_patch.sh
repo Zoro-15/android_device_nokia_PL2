@@ -17,10 +17,15 @@ if [ ! -f "$THEMED_BATTERY" ]; then
     exit 0
 fi
 
-# Check if already patched
-if grep -q "WIDTH = 28f" "$THEMED_BATTERY" 2>/dev/null; then
-    echo "--> ThemedBatteryDrawable.kt is already patched for 28x15 horizontal capsule."
+# Check if already patched with latest coordinates
+if grep -q "22.5f \* fillFraction" "$THEMED_BATTERY" 2>/dev/null; then
+    echo "--> ThemedBatteryDrawable.kt is already patched with latest 28x15 coordinates."
     exit 0
+fi
+
+# If previously patched with older coordinates, reset frameworks/base file first for clean re-patch
+if [ -d "$ROOT_DIR/frameworks/base/.git" ] && command -v git >/dev/null 2>&1; then
+    (cd "$ROOT_DIR/frameworks/base" && git checkout -- packages/SettingsLib/src/com/android/settingslib/graph/ThemedBatteryDrawable.kt 2>/dev/null || true)
 fi
 
 # Try git apply first if patch file exists
