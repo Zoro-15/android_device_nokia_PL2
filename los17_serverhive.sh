@@ -68,21 +68,21 @@ cat > .repo/local_manifests/nokia.xml <<'XML'
 <?xml version="1.0" encoding="UTF-8"?>
 <manifest>
   <remote name="zoro" fetch="https://github.com/Zoro-15" revision="lineage-17.1"/>
-  <remote name="revived" fetch="https://github.com/LineageOS-Revived" revision="lineage-17.1"/>
 
   <project path="device/nokia/PL2" name="android_device_nokia_PL2" remote="zoro"/>
   <project path="device/nokia/sdm660-common" name="android_device_nokia_sdm660-common" remote="zoro"/>
   <project path="kernel/nokia/sdm660" name="android_kernel_nokia_sdm660" remote="zoro"/>
   <project path="vendor/nokia" name="proprietary_vendor_nokia" remote="zoro"/>
-  <project path="device/qcom/sepolicy-legacy-um" name="android_device_qcom_sepolicy-legacy-um" remote="revived"/>
 </manifest>
 XML
 
 # ------------------------------------------------------------------------------
-# 5. Normal Repo Sync
+# 5. Normal Repo Sync (capped to 16 jobs to avoid GitHub rate-limiting/bans)
 # ------------------------------------------------------------------------------
-echo "--> Running repo sync..."
-repo sync -c -j$(nproc --all) --force-sync --no-clone-bundle --no-tags
+SYNC_JOBS=$(nproc --all 2>/dev/null || echo 8)
+[ "$SYNC_JOBS" -gt 16 ] && SYNC_JOBS=16
+echo "--> Running repo sync (-j${SYNC_JOBS})..."
+repo sync -c -j"${SYNC_JOBS}" --force-sync --no-clone-bundle --no-tags
 
 # ------------------------------------------------------------------------------
 # 6. Hardware Firmware Check (TAS2557 SmartAmp DSP)
