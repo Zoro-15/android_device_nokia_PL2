@@ -66,8 +66,8 @@ index 327f12e..8e49bc1 100644
 -                    bounds.bottom - bounds.height() * fillFraction,
 -                    bounds.right.toFloat(),
 +                    0f,
-+                    bounds.left + (bounds.width() * fillFraction),
-                     bounds.bottom.toFloat())
++                    22.5f * fillFraction,
+                     15f)
              c.drawPath(unifiedPath, fillPaint)
              c.restore()
 @@ -248,6 +256,24 @@ open class ThemedBatteryDrawable(private val context: Context, frameColor: Int)
@@ -78,7 +78,7 @@ index 327f12e..8e49bc1 100644
 +        // Render real-time battery percentage centered inside the capsule body
 +        if (batteryLevel >= 0) {
 +            val pctString = batteryLevel.toString()
-+            textPaint.textSize = bounds.height() * 0.62f
++            textPaint.textSize = if (batteryLevel >= 100) 6.8f else 8.0f
 +            textPaint.color = if (batteryLevel >= 90 && !dualTone) {
 +                Color.BLACK
 +            } else if (batteryLevel <= Companion.CRITICAL_LEVEL && !charging) {
@@ -86,10 +86,8 @@ index 327f12e..8e49bc1 100644
 +            } else {
 +                if (dualTone) Color.WHITE else Color.BLACK
 +            }
-+            val textBounds = Rect()
-+            textPaint.getTextBounds(pctString, 0, pctString.length, textBounds)
-+            val centerX = bounds.left + bounds.width() * 0.40f
-+            val centerY = bounds.centerY().toFloat() - (textPaint.descent() + textPaint.ascent()) / 2f
++            val centerX = 11.7f
++            val centerY = 7.5f - (textPaint.descent() + textPaint.ascent()) / 2f
 +            c.drawText(pctString, centerX, centerY, textPaint)
 +        }
          c.restore()

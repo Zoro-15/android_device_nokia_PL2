@@ -73,7 +73,7 @@ if old_fill:
 
 # 4. Transform dualTone clipRect to horizontal
 content = re.sub(r'c\.clipRect\(0f,\s*bounds\.bottom - bounds\.height\(\) \* fillFraction,\s*bounds\.right\.toFloat\(\),\s*bounds\.bottom\.toFloat\(\)\)',
-                 'c.clipRect(0f, 0f, bounds.left + (bounds.width() * fillFraction), bounds.bottom.toFloat())', content)
+                 'c.clipRect(0f, 0f, 22.5f * fillFraction, 15f)', content)
 
 # 5. Add centered percentage text drawing inside draw()
 if "textPaint.textSize" not in content:
@@ -82,7 +82,7 @@ if "textPaint.textSize" not in content:
         draw_text_code = """        // Render real-time battery percentage centered inside the capsule body
         if (batteryLevel >= 0) {
             val pctString = batteryLevel.toString()
-            textPaint.textSize = bounds.height() * 0.62f
+            textPaint.textSize = if (batteryLevel >= 100) 6.8f else 8.0f
             textPaint.color = if (batteryLevel >= 90 && !dualTone) {
                 Color.BLACK
             } else if (batteryLevel <= Companion.CRITICAL_LEVEL && !charging) {
@@ -90,8 +90,8 @@ if "textPaint.textSize" not in content:
             } else {
                 if (dualTone) Color.WHITE else Color.BLACK
             }
-            val centerX = bounds.left + bounds.width() * 0.40f
-            val centerY = bounds.centerY().toFloat() - (textPaint.descent() + textPaint.ascent()) / 2f
+            val centerX = 11.7f
+            val centerY = 7.5f - (textPaint.descent() + textPaint.ascent()) / 2f
             c.drawText(pctString, centerX, centerY, textPaint)
         }
         c.restore()

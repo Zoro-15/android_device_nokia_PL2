@@ -1,4 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <dimen name="status_bar_extra_padding">16dp</dimen>
+    <dimen name="status_bar_battery_icon_width">26dp</dimen>
+    <dimen name="status_bar_battery_icon_height">14dp</dimen>
 </resources>
