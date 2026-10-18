@@ -60,7 +60,7 @@ export BUILD_HOSTNAME=serverhive
 # ------------------------------------------------------------------------------
 # 4. Manifest Initialization & Local Manifest Setup
 # ------------------------------------------------------------------------------
-rm -rf .repo/local_manifests
+rm -rf .repo/local_manifests .repo/local_manifest.xml .repo/manifest.xml .repo/manifests .repo/manifests.git
 
 echo "--> Initializing LineageOS 17.1 manifest..."
 repo init -u https://github.com/LineageOS-Revived/android.git -b lineage-17.1 --git-lfs --depth=1
