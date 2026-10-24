@@ -10,7 +10,9 @@
 
         <!-- User Switching & Profiles -->
         <permission name="android.permission.MANAGE_USERS" />
+        <permission name="android.permission.CREATE_USERS" />
         <permission name="android.permission.INTERACT_ACROSS_USERS" />
+        <permission name="android.permission.INTERACT_ACROSS_USERS_FULL" />
 
         <!-- Widgets, Wallpaper & Status Bar -->
         <permission name="android.permission.BIND_APPWIDGET" />
