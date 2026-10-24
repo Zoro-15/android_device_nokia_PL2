@@ -41,18 +41,18 @@ with open(themed_battery_path, "r", encoding="utf-8") as f:
 if "import java.io.File" not in content:
     content = content.replace("import android.util.PathParser", "import android.util.PathParser\nimport android.graphics.Color\nimport android.graphics.Typeface\nimport java.io.File")
 
-# 2. Typeface and textPaint with PlusJakartaSans support
-if "PlusJakartaSans-ExtraBold.ttf" not in content:
+# 2. Typeface and textPaint with Google Sans Rounded Bold support
+if "GoogleSansRounded-Bold.ttf" not in content:
     text_paint_code = """    private val textPaint = Paint(Paint.ANTI_ALIAS_FLAG).also { p ->
         p.textAlign = Paint.Align.CENTER
         p.isDither = true
-        val fontFile = File("/system/fonts/PlusJakartaSans-ExtraBold.ttf")
+        val fontFile = File("/system/fonts/GoogleSansRounded-Bold.ttf")
         p.typeface = if (fontFile.exists()) {
             try { Typeface.createFromFile(fontFile) } catch (e: Exception) { Typeface.create("sans-serif", Typeface.BOLD) }
         } else {
             Typeface.create("sans-serif", Typeface.BOLD)
         }
-        p.isFakeBoldText = true
+        p.isFakeBoldText = false
     }
 
     private val fillPaint = Paint"""

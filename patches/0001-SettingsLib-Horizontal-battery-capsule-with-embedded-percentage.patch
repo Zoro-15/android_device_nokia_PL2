@@ -7,9 +7,9 @@ Subject: [PATCH] SystemUI & SettingsLib: Android 16 QPR2 Status Bar Icons & Batt
   * Horizontal stadium capsule (35x15) with curvature radius 5.2dp
   * Scaled terminal nipple (1.2x, 1.5x4.8dp, r=0.72) centered on Y=7.5dp
   * Symmetrical balanced thunderbolt (X=21.5 to 29.5) spanning boundary
-  * Authentic natural charging green (#34C759) and black text
+  * Authentic natural charging green (#34A853) and black text
   * Dynamic icon blackness/tint matching Wi-Fi/Cellular icons in light theme
-  * Plus Jakarta Sans ExtraBold interior battery percentage typography
+  * Google Sans Rounded Bold interior battery percentage typography
 - BatteryMeterView:
   * Proportionate 35:15 (7/3) width-to-height scaling
 - StatusIconContainer:
@@ -44,13 +44,13 @@ index 327f12e..9f8a11b 100644
 +    private val textPaint = Paint(Paint.ANTI_ALIAS_FLAG).also { p ->
 +        p.textAlign = Paint.Align.CENTER
 +        p.isDither = true
-+        val fontFile = File("/system/fonts/PlusJakartaSans-ExtraBold.ttf")
++        val fontFile = File("/system/fonts/GoogleSansRounded-Bold.ttf")
 +        p.typeface = if (fontFile.exists()) {
 +            try { Typeface.createFromFile(fontFile) } catch (e: Exception) { Typeface.create("sans-serif", Typeface.BOLD) }
 +        } else {
 +            Typeface.create("sans-serif", Typeface.BOLD)
 +        }
-+        p.isFakeBoldText = true
++        p.isFakeBoldText = false
 +    }
 +
      private val errorPaint = Paint(Paint.ANTI_ALIAS_FLAG).also { p ->
@@ -131,7 +131,7 @@ index 327f12e..9f8a11b 100644
 +        val activeTextColor: Int
 +        val boltColor: Int
 +        if (charging) {
-+            activeFillColor = 0xFF34C759.toInt() // Authentic Natural Charging Green
++            activeFillColor = 0xFF34A853.toInt() // Authentic Google Material Green 500
 +            activeTextColor = 0xFF383E42.toInt() // Shade 1 Refined Charcoal (Android 16 QPR2)
 +            boltColor = if (isDarkTheme) Color.WHITE else 0xFF383E42.toInt()
 +        } else if (batteryLevel <= 15) {
@@ -160,7 +160,7 @@ index 327f12e..9f8a11b 100644
 +        val pillTop = 1.0f * scale
 +        val pillRight = 31.5f * scale
 +        val pillBottom = 14.0f * scale
-+        val pillRadius = 5.2f * scale
++        val pillRadius = 4.4f * scale
 +
 +        levelRect.set(pillLeft, pillTop, pillRight, pillBottom)
 +        unifiedPath.reset()
@@ -194,12 +194,12 @@ index 327f12e..9f8a11b 100644
 +            fillPaint.color = boltColor
 +            c.drawPath(scaledBolt, fillPaint)
 +        } else {
-+            // 1.2x Scaled terminal nipple: (26.2, 5.1) to (27.7, 9.9), radius 0.72
-+            levelRect.set(32.1f * scale, 5.1f * scale, 33.6f * scale, 9.9f * scale)
-+            c.drawRoundRect(levelRect, 0.72f * scale, 0.72f * scale, dualToneBackgroundFill)
++            // Stadium terminal cap: (32.2, 5.0) to (33.7, 10.0), radius 0.75 (transparent frosted)
++            levelRect.set(32.2f * scale, 5.0f * scale, 33.7f * scale, 10.0f * scale)
++            c.drawRoundRect(levelRect, 0.75f * scale, 0.75f * scale, dualToneBackgroundFill)
 +        }
 +
-+        // 4. Centered Large Bold Text (Plus Jakarta Sans)
++        // 4. Centered Large Bold Text (Google Sans Rounded Bold)
 +        textPaint.textSize = (if (batteryLevel == 100) 9.8f else 11.0f) * scale
 +        val textX = 18.50f * scale
 +        val fm = textPaint.fontMetrics
