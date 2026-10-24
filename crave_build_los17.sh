@@ -100,6 +100,14 @@ fi
 test -d device/nokia/PL2 && test -d device/nokia/sdm660-common && test -d kernel/nokia/sdm660 && test -d vendor/nokia
 
 # ==============================================================================
+# PHASE 4.5: STATUS BAR BATTERY & ICON SPACING PATCHES
+# ==============================================================================
+if [ -f "device/nokia/PL2/patches/apply_battery_patch.sh" ]; then
+    echo "--> Applying Status Bar Battery & Icon Spacing patches to frameworks/base..."
+    bash device/nokia/PL2/patches/apply_battery_patch.sh .
+fi
+
+# ==============================================================================
 # PHASE 5: CCACHE & BUILD TARGET SETUP
 # ==============================================================================
 if [ -x prebuilts/misc/linux-x86/ccache/ccache ]; then
