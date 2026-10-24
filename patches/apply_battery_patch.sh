@@ -1,122 +1,79 @@
 #!/bin/bash
 # ==============================================================================
-# Android 16 QPR2 Status Bar Battery Patch Applicator
+# Android 16 QPR2 Status Bar Battery & Icon Spacing Patch Applicator
 # Supported ROMs: LineageOS 17.1, QASSA, NusantaraProject 10, AOSP 10
-# Target: frameworks/base (ThemedBatteryDrawable.kt & BatteryMeterView.java)
+# Targets:
+#   - frameworks/base/packages/SettingsLib (ThemedBatteryDrawable.kt)
+#   - frameworks/base/packages/SystemUI (BatteryMeterView.java)
+#   - frameworks/base/packages/SystemUI (StatusIconContainer.java)
 # ==============================================================================
 
 ROOT_DIR="${1:-$PWD}"
 PATCH_FILE="$ROOT_DIR/device/nokia/PL2/patches/0001-SettingsLib-Horizontal-battery-capsule-with-embedded-percentage.patch"
 THEMED_BATTERY="$ROOT_DIR/frameworks/base/packages/SettingsLib/src/com/android/settingslib/graph/ThemedBatteryDrawable.kt"
 BATTERY_VIEW="$ROOT_DIR/frameworks/base/packages/SystemUI/src/com/android/systemui/BatteryMeterView.java"
+STATUS_CONTAINER="$ROOT_DIR/frameworks/base/packages/SystemUI/src/com/android/systemui/statusbar/phone/StatusIconContainer.java"
 
-echo "=== Android 16 QPR2 Status Bar Battery Patch ==="
+echo "=== Android 16 QPR2 Status Bar & Battery Patch ==="
 
-if [ ! -f "$THEMED_BATTERY" ]; then
-    echo "Warning: $THEMED_BATTERY not found! Check directory structure."
-    exit 0
-fi
-
-# Check if already patched with latest coordinates
-if grep -q "22.5f \* fillFraction" "$THEMED_BATTERY" 2>/dev/null; then
-    echo "--> ThemedBatteryDrawable.kt is already patched with latest 28x15 coordinates."
-    exit 0
-fi
-
-# If previously patched with older coordinates, reset frameworks/base file first for clean re-patch
-if [ -d "$ROOT_DIR/frameworks/base/.git" ] && command -v git >/dev/null 2>&1; then
-    (cd "$ROOT_DIR/frameworks/base" && git checkout -- packages/SettingsLib/src/com/android/settingslib/graph/ThemedBatteryDrawable.kt 2>/dev/null || true)
-fi
-
-# Try git apply first if patch file exists
-if [ -f "$PATCH_FILE" ] && command -v git >/dev/null 2>&1; then
+# 1. Check if git apply works first
+if [ -f "$PATCH_FILE" ] && [ -d "$ROOT_DIR/frameworks/base/.git" ] && command -v git >/dev/null 2>&1; then
     echo "--> Attempting git apply on frameworks/base..."
     if (cd "$ROOT_DIR/frameworks/base" && git apply --check "$PATCH_FILE" 2>/dev/null); then
         (cd "$ROOT_DIR/frameworks/base" && git apply "$PATCH_FILE")
         echo "--> Successfully applied via git apply!"
         exit 0
     else
-        echo "--> git apply check failed, falling back to direct AST/python transform..."
+        echo "--> git apply check failed, falling back to direct AST/python transforms..."
     fi
 fi
 
-# Direct Python Fallback Transformer (Guaranteed to work regardless of minor upstream differences)
-python3 - << 'PYEOF' || python - << 'PYEOF'
+# 2. Direct Python Transformer for ThemedBatteryDrawable.kt
+if [ -f "$THEMED_BATTERY" ]; then
+    python3 - << 'PYEOF' || python - << 'PYEOF'
 import sys, re
 
 themed_battery_path = sys.argv[1]
 with open(themed_battery_path, "r", encoding="utf-8") as f:
     content = f.read()
 
-# 1. Add Typeface import if missing
-if "import android.graphics.Typeface" not in content:
-    content = content.replace("import android.util.PathParser", "import android.util.PathParser\nimport android.graphics.Typeface")
+# 1. Imports
+if "import java.io.File" not in content:
+    content = content.replace("import android.util.PathParser", "import android.util.PathParser\nimport android.graphics.Color\nimport android.graphics.Typeface\nimport java.io.File")
 
-# 2. Add textPaint initialization if missing
-if "val textPaint = Paint" not in content:
-    init_marker = "private val fillPaint = Paint"
+# 2. Typeface and textPaint with PlusJakartaSans support
+if "PlusJakartaSans-ExtraBold.ttf" not in content:
     text_paint_code = """    private val textPaint = Paint(Paint.ANTI_ALIAS_FLAG).also { p ->
         p.textAlign = Paint.Align.CENTER
         p.isDither = true
-        p.typeface = Typeface.create("sans-serif", Typeface.BOLD)
+        val fontFile = File("/system/fonts/PlusJakartaSans-ExtraBold.ttf")
+        p.typeface = if (fontFile.exists()) {
+            try { Typeface.createFromFile(fontFile) } catch (e: Exception) { Typeface.create("sans-serif", Typeface.BOLD) }
+        } else {
+            Typeface.create("sans-serif", Typeface.BOLD)
+        }
+        p.isFakeBoldText = true
     }
 
     private val fillPaint = Paint"""
-    content = content.replace(init_marker, text_paint_code, 1)
+    if "val textPaint = Paint" in content:
+        content = re.sub(r'private val textPaint = Paint\(.*?\n    private val fillPaint = Paint', text_paint_code, content, flags=re.DOTALL)
+    else:
+        content = content.replace("private val fillPaint = Paint", text_paint_code, 1)
 
-# 3. Transform horizontal fill in draw()
-old_fill = re.search(r'val fillTop =\s*if \(batteryLevel >= 95\)\s*fillRect\.top\s*else\s*fillRect\.top \+ \(fillRect\.height\(\) \* \(1 - fillFraction\)\)\s*levelRect\.top = Math\.floor\(fillTop\.toDouble\(\)\)\.toFloat\(\)', content)
-if old_fill:
-    new_fill = """val fillRight =
-                if (batteryLevel >= 98)
-                    fillRect.right
-                else
-                    fillRect.left + (fillRect.width() * fillFraction)
-
-        levelRect.right = Math.ceil(fillRight.toDouble()).toFloat()"""
-    content = content.replace(old_fill.group(0), new_fill, 1)
-
-# 4. Transform dualTone clipRect to horizontal
-content = re.sub(r'c\.clipRect\(0f,\s*bounds\.bottom - bounds\.height\(\) \* fillFraction,\s*bounds\.right\.toFloat\(\),\s*bounds\.bottom\.toFloat\(\)\)',
-                 'c.clipRect(0f, 0f, 22.5f * fillFraction, 15f)', content)
-
-# 5. Add centered percentage text drawing inside draw()
-if "textPaint.textSize" not in content:
-    restore_marker = "c.restore()\n    }\n\n    private fun batteryColorForLevel"
-    if restore_marker in content:
-        draw_text_code = """        // Render real-time battery percentage centered inside the capsule body
-        if (batteryLevel >= 0) {
-            val pctString = batteryLevel.toString()
-            textPaint.textSize = if (batteryLevel >= 100) 6.8f else 8.0f
-            textPaint.color = if (batteryLevel >= 90 && !dualTone) {
-                Color.BLACK
-            } else if (batteryLevel <= Companion.CRITICAL_LEVEL && !charging) {
-                Color.WHITE
-            } else {
-                if (dualTone) Color.WHITE else Color.BLACK
-            }
-            val centerX = 11.7f
-            val centerY = 7.5f - (textPaint.descent() + textPaint.ascent()) / 2f
-            c.drawText(pctString, centerX, centerY, textPaint)
-        }
-        c.restore()
-    }
-
-    private fun batteryColorForLevel"""
-        content = content.replace(restore_marker, draw_text_code, 1)
-
-# 6. Change Companion dimensions to 28x15
-content = re.sub(r'private const val WIDTH = 12f', 'private const val WIDTH = 28f', content)
-content = re.sub(r'private const val HEIGHT = 20f', 'private const val HEIGHT = 15f', content)
+# 3. Canvas dimensions to 35x15
+content = re.sub(r'private const val WIDTH = \d+f', 'private const val WIDTH = 35f', content)
+content = re.sub(r'private const val HEIGHT = \d+f', 'private const val HEIGHT = 15f', content)
 
 with open(themed_battery_path, "w", encoding="utf-8") as f:
     f.write(content)
 
-print("--> Successfully transformed ThemedBatteryDrawable.kt to 28x15 horizontal capsule.")
+print("--> Successfully updated ThemedBatteryDrawable.kt.")
 PYEOF
-"$THEMED_BATTERY"
+    "$THEMED_BATTERY"
+fi
 
-# Suppress external percentage text view in BatteryMeterView if present
+# 3. Suppress external percentage text view in BatteryMeterView if present
 if [ -f "$BATTERY_VIEW" ]; then
     python3 - << 'PYEOF' || python - << 'PYEOF'
 import sys
@@ -134,11 +91,47 @@ if "mBatteryPercentView.setVisibility(View.GONE); return;" not in bv_content:
         }"""
     if target in bv_content:
         bv_content = bv_content.replace(target, replacement, 1)
-        with open(battery_view_path, "w", encoding="utf-8") as f:
-            f.write(bv_content)
-        print("--> Successfully suppressed external percent view in BatteryMeterView.java.")
+
+# Ensure 7/3 ratio for horizontal pill
+bv_content = bv_content.replace("getResources().getDimensionPixelSize(R.dimen.status_bar_battery_icon_width);", "(resHeight * 7) / 3;")
+
+with open(battery_view_path, "w", encoding="utf-8") as f:
+    f.write(bv_content)
+print("--> Successfully updated BatteryMeterView.java.")
 PYEOF
     "$BATTERY_VIEW"
 fi
 
-echo "=== Battery Patch Application Complete ==="
+# 4. StatusIconContainer icon spacing (Wi-Fi to Cellular distance)
+if [ -f "$STATUS_CONTAINER" ]; then
+    python3 - << 'PYEOF' || python - << 'PYEOF'
+import sys
+
+status_container_path = sys.argv[1]
+with open(status_container_path, "r", encoding="utf-8") as f:
+    sc_content = f.read()
+
+if "mIconSpacing" not in sc_content:
+    # Add field
+    sc_content = sc_content.replace("private int mUnderflowWidth;", "private int mUnderflowWidth;\n    private float mIconSpacing;")
+    
+    # Initialize in initDimens()
+    sc_content = sc_content.replace("mUnderflowWidth = mIconDotFrameWidth + (mStaticDotDiameter + mDotPadding) * 0;",
+                                    "mUnderflowWidth = mIconDotFrameWidth + (mStaticDotDiameter + mDotPadding) * 0;\n        mIconSpacing = getResources().getDisplayMetrics().density * 6.5f;")
+    
+    # Decrement in calculateIconTranslations()
+    sc_content = sc_content.replace("translationX -= getViewTotalWidth(child);",
+                                    "translationX -= getViewTotalWidth(child);\n            translationX -= mIconSpacing;")
+    
+    # Measure in onMeasure()
+    sc_content = sc_content.replace("contentWidth += getViewTotalMeasuredWidth(child);",
+                                    "contentWidth += getViewTotalMeasuredWidth(child);\n            contentWidth += (int) mIconSpacing;")
+
+    with open(status_container_path, "w", encoding="utf-8") as f:
+        f.write(sc_content)
+    print("--> Successfully applied 6.5dp icon spacing to StatusIconContainer.java.")
+PYEOF
+    "$STATUS_CONTAINER"
+fi
+
+echo "=== Battery & Icon Spacing Patch Application Complete ==="
