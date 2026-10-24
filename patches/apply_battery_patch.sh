@@ -120,8 +120,13 @@ if "mIconSpacing" not in sc_content:
                                     "mUnderflowWidth = mIconDotFrameWidth + (mStaticDotDiameter + mDotPadding) * 0;\n        mIconSpacing = getResources().getDisplayMetrics().density * 6.5f;")
     
     # Decrement in calculateIconTranslations()
-    sc_content = sc_content.replace("translationX -= getViewTotalWidth(child);",
-                                    "translationX -= getViewTotalWidth(child);\n            translationX -= mIconSpacing;")
+    sic_replacement = """translationX -= getViewTotalWidth(child);
+            if (child instanceof StatusBarWifiView) {
+                translationX += getResources().getDisplayMetrics().density * 2.5f;
+            } else {
+                translationX -= mIconSpacing;
+            }"""
+    sc_content = sc_content.replace("translationX -= getViewTotalWidth(child);", sic_replacement)
     
     # Measure in onMeasure()
     sc_content = sc_content.replace("contentWidth += getViewTotalMeasuredWidth(child);",

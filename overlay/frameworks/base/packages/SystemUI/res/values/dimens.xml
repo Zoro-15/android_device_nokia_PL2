@@ -1,7 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <dimen name="status_bar_extra_padding">16dp</dimen>
-    <dimen name="status_bar_battery_icon_width">33dp</dimen>
-    <dimen name="status_bar_battery_icon_height">14dp</dimen>
-    <dimen name="status_bar_icon_padding">6.5dp</dimen>
+    <dimen name="status_bar_battery_icon_width">28dp</dimen>
+    <dimen name="status_bar_battery_icon_height">15dp</dimen>
+    <dimen name="status_bar_wifi_signal_size">18dp</dimen>
+    <dimen name="status_bar_extra_padding">0dp</dimen>
+    <dimen name="status_bar_padding_end">0dp</dimen>
+    <dimen name="signal_cluster_battery_padding">0dp</dimen>
+    <dimen name="status_bar_wifi_signal_spacer_width">0dp</dimen>
+    <dimen name="signal_cluster_margin_start">0dp</dimen>
+    <dimen name="status_bar_icon_padding">0dp</dimen>
 </resources>

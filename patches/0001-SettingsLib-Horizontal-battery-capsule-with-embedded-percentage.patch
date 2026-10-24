@@ -56,7 +56,7 @@ index 327f12e..9f8a11b 100644
      private val errorPaint = Paint(Paint.ANTI_ALIAS_FLAG).also { p ->
          p.color = Utils.getColorStateListDefaultColor(context, R.color.batterymeter_plus_color)
          p.alpha = 255
-@@ -182,78 +197,112 @@ open class ThemedBatteryDrawable(private val context: Context, frameColor: Int)
+@@ -182,72 +197,107 @@ open class ThemedBatteryDrawable(private val context: Context, frameColor: Int)
      override fun draw(c: Canvas) {
 -        c.saveLayer(null, null)
 -        unifiedPath.reset()
@@ -132,20 +132,20 @@ index 327f12e..9f8a11b 100644
 +        val boltColor: Int
 +        if (charging) {
 +            activeFillColor = 0xFF34C759.toInt() // Authentic Natural Charging Green
-+            activeTextColor = Color.BLACK
-+            boltColor = if (isDarkTheme) Color.WHITE else Color.BLACK
++            activeTextColor = 0xFF383E42.toInt() // Shade 1 Refined Charcoal (Android 16 QPR2)
++            boltColor = if (isDarkTheme) Color.WHITE else 0xFF383E42.toInt()
 +        } else if (batteryLevel <= 15) {
 +            activeFillColor = 0xFFFF334B.toInt() // Red
 +            activeTextColor = Color.WHITE
 +            boltColor = 0
 +        } else if (batteryLevel <= 20) {
 +            activeFillColor = 0xFFFFCC00.toInt() // Yellow
-+            activeTextColor = Color.BLACK
++            activeTextColor = 0xFF383E42.toInt() // Shade 1 Refined Charcoal
 +            boltColor = 0
 +        } else {
 +            if (isDarkTheme) {
 +                activeFillColor = Color.WHITE
-+                activeTextColor = Color.BLACK
++                activeTextColor = 0xFF383E42.toInt() // Shade 1 Refined Charcoal
 +            } else {
 +                activeFillColor = fillColor
 +                activeTextColor = Color.WHITE
@@ -156,9 +156,9 @@ index 327f12e..9f8a11b 100644
 +        textPaint.color = activeTextColor
 +
 +        // 1. Frosted track pill body: (0.5, 1.0) to (25.5, 14.0), radius 5.2
-+        val pillLeft = 0.5f * scale
++        val pillLeft = 6.5f * scale
 +        val pillTop = 1.0f * scale
-+        val pillRight = 25.5f * scale
++        val pillRight = 31.5f * scale
 +        val pillBottom = 14.0f * scale
 +        val pillRadius = 5.2f * scale
 +
@@ -179,29 +179,29 @@ index 327f12e..9f8a11b 100644
 +            c.restore()
 +        }
 +
-+        // 3. Right side indicator
++        // 3. Right side indicator: Authentic Thunderbolt (scaled to 80% around center 25.5, 7.5)
 +        if (charging) {
 +            scaledBolt.reset()
-+            scaledBolt.moveTo(23.5f * scale, 12.5f * scale)
-+            scaledBolt.lineTo(24.0f * scale, 9.0f * scale)
-+            scaledBolt.lineTo(21.5f * scale, 9.0f * scale)
-+            scaledBolt.lineTo(26.0f * scale, 2.5f * scale)
-+            scaledBolt.lineTo(27.0f * scale, 2.5f * scale)
-+            scaledBolt.lineTo(26.5f * scale, 6.5f * scale)
-+            scaledBolt.lineTo(29.5f * scale, 6.5f * scale)
-+            scaledBolt.lineTo(24.5f * scale, 12.5f * scale)
++            scaledBolt.moveTo(29.9f * scale, 11.5f * scale)
++            scaledBolt.lineTo(30.3f * scale, 8.7f * scale)
++            scaledBolt.lineTo(28.3f * scale, 8.7f * scale)
++            scaledBolt.lineTo(31.9f * scale, 3.5f * scale)
++            scaledBolt.lineTo(32.7f * scale, 3.5f * scale)
++            scaledBolt.lineTo(32.3f * scale, 6.7f * scale)
++            scaledBolt.lineTo(34.7f * scale, 6.7f * scale)
++            scaledBolt.lineTo(30.7f * scale, 11.5f * scale)
 +            scaledBolt.close()
 +            fillPaint.color = boltColor
 +            c.drawPath(scaledBolt, fillPaint)
 +        } else {
 +            // 1.2x Scaled terminal nipple: (26.2, 5.1) to (27.7, 9.9), radius 0.72
-+            levelRect.set(26.2f * scale, 5.1f * scale, 27.7f * scale, 9.9f * scale)
++            levelRect.set(32.1f * scale, 5.1f * scale, 33.6f * scale, 9.9f * scale)
 +            c.drawRoundRect(levelRect, 0.72f * scale, 0.72f * scale, dualToneBackgroundFill)
 +        }
 +
 +        // 4. Centered Large Bold Text (Plus Jakarta Sans)
 +        textPaint.textSize = (if (batteryLevel == 100) 9.8f else 11.0f) * scale
-+        val textX = 12.50f * scale
++        val textX = 18.50f * scale
 +        val fm = textPaint.fontMetrics
 +        val textY = 7.50f * scale - (fm.descent + fm.ascent) / 2f
 +        c.drawText(batteryLevel.toString(), textX, textY, textPaint)
@@ -234,14 +234,14 @@ diff --git a/packages/SystemUI/src/com/android/systemui/BatteryMeterView.java b/
 index a12bc34..e87fe21 100644
 --- a/packages/SystemUI/src/com/android/systemui/BatteryMeterView.java
 +++ b/packages/SystemUI/src/com/android/systemui/BatteryMeterView.java
-@@ -160,7 +160,7 @@ public class BatteryMeterView extends LinearLayout implements
+@@ -160,5 +160,5 @@ public class BatteryMeterView extends LinearLayout implements
          int resHeight = getResources().getDimensionPixelSize(R.dimen.status_bar_battery_icon_height);
 -        int resWidth = getResources().getDimensionPixelSize(R.dimen.status_bar_battery_icon_width);
 +        int resWidth = (resHeight * 7) / 3;
          MarginLayoutParams mlp = new MarginLayoutParams(resWidth, resHeight);
          mlp.setMargins(0, 0, 0, getResources().getDimensionPixelOffset(R.dimen.battery_margin_bottom));
          addView(mBatteryIconView, mlp);
-@@ -465,7 +465,7 @@ public class BatteryMeterView extends LinearLayout implements
+@@ -465,5 +465,5 @@ public class BatteryMeterView extends LinearLayout implements
          int batteryHeight = res.getDimensionPixelSize(R.dimen.status_bar_battery_icon_height);
          int batteryWidth = mBatteryStyle == BATTERY_STYLE_CIRCLE
                  ? res.getDimensionPixelSize(R.dimen.status_bar_battery_icon_circle_width)
@@ -276,11 +276,15 @@ index 1234567..89abcdef 100644
          }
  
          if (mode == MeasureSpec.EXACTLY) {
-@@ -290,6 +293,7 @@ public class StatusIconContainer extends AlphaOptimizedLinearLayout implements
+@@ -290,6 +293,11 @@ public class StatusIconContainer extends AlphaOptimizedLinearLayout implements
              state.xTranslation = translationX - getViewTotalWidth(child);
              mLayoutStates.add(0, state);
              translationX -= getViewTotalWidth(child);
-+            translationX -= mIconSpacing;
++            if (child instanceof StatusBarWifiView) {
++                translationX += getResources().getDisplayMetrics().density * 2.5f;
++            } else {
++                translationX -= mIconSpacing;
++            }
          }
  
          int totalVisible = mLayoutStates.size();
