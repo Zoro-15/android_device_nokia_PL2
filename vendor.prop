@@ -16,3 +16,6 @@ ro.hardware.fingerprint=elan
 
 # Radio
 ro.rf.power.reduction.for.mcc=1
+
+# Freeform Multi-Window Support
+persist.sys.debug.multi_window=true

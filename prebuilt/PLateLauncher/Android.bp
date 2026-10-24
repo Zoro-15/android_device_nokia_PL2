@@ -1,0 +1,27 @@
+android_app_import {
+    name: "PLateLauncher",
+    apk: "PLateLauncher.apk",
+    privileged: true,
+    certificate: "platform",
+    dex_preopt: {
+        enabled: false,
+    },
+    required: [
+        "privapp-permissions-com.plate.launcher.xml",
+        "default-permissions-com.plate.launcher.xml",
+    ],
+}
+
+prebuilt_etc {
+    name: "privapp-permissions-com.plate.launcher.xml",
+    sub_dir: "permissions",
+    src: "privapp-permissions-com.plate.launcher.xml",
+    filename_from_src: true,
+}
+
+prebuilt_etc {
+    name: "default-permissions-com.plate.launcher.xml",
+    sub_dir: "default-permissions",
+    src: "default-permissions-com.plate.launcher.xml",
+    filename_from_src: true,
+}

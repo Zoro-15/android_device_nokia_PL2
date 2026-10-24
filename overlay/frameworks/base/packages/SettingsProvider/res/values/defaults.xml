@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Auto-enable Dock Accessibility Service on first boot -->
+    <bool name="def_accessibility_enabled">true</bool>
+    <string name="def_enabled_accessibility_services" translatable="false">com.plate.launcher/com.plate.launcher.services.DockService</string>
+
+    <!-- Auto-enable Notification Listener for System Tray (coexists with Trebuchet) -->
+    <string name="def_enabled_notification_listeners" translatable="false">com.android.launcher3/com.android.launcher3.notification.NotificationListener:com.plate.launcher/com.plate.launcher.services.NotificationService</string>
+
+    <!-- Force apps to be resizable in freeform windows -->
+    <bool name="def_force_resizable_activities">true</bool>
+</resources>

@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- The default tiles to display in QuickSettings, including PLate DEX desktop toggle -->
+    <string name="quick_settings_tiles_default" translatable="false">
+        wifi,bt,dnd,flashlight,rotation,battery,cell,airplane,night,custom(com.plate.launcher/.services.DockTileService)
+    </string>
+</resources>

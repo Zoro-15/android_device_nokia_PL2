@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<permissions>
+    <privapp-permissions package="com.plate.launcher">
+        <!-- System Settings & Display Control -->
+        <permission name="android.permission.WRITE_SECURE_SETTINGS" />
+
+        <!-- Task, Recents & Process Management -->
+        <permission name="android.permission.PACKAGE_USAGE_STATS" />
+        <permission name="android.permission.FORCE_STOP_PACKAGES" />
+
+        <!-- User Switching & Profiles -->
+        <permission name="android.permission.MANAGE_USERS" />
+        <permission name="android.permission.INTERACT_ACROSS_USERS" />
+
+        <!-- Widgets, Wallpaper & Status Bar -->
+        <permission name="android.permission.BIND_APPWIDGET" />
+        <permission name="android.permission.BIND_WALLPAPER" />
+        <permission name="android.permission.SET_WALLPAPER_COMPONENT" />
+        <permission name="android.permission.STATUS_BAR" />
+
+        <!-- Power Controls -->
+        <permission name="android.permission.REBOOT" />
+    </privapp-permissions>
+</permissions>

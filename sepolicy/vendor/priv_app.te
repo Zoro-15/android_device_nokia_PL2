@@ -1,0 +1,4 @@
+# Allow priv_app (including PLate.Launcher) to read hardware stats for dock/monitors
+allow priv_app sysfs_batteryinfo:file r_file_perms;
+allow priv_app sysfs_devices_system_cpu:file r_file_perms;
+allow priv_app proc_stat:file r_file_perms;
