@@ -19,8 +19,9 @@ echo "=== Android 16 QPR2 Status Bar & Battery Patch ==="
 # 1. Check if git apply works first
 if [ -f "$PATCH_FILE" ] && [ -d "$ROOT_DIR/frameworks/base/.git" ] && command -v git >/dev/null 2>&1; then
     echo "--> Attempting git apply on frameworks/base..."
-    if (cd "$ROOT_DIR/frameworks/base" && git apply --check "$PATCH_FILE" 2>/dev/null); then
-        (cd "$ROOT_DIR/frameworks/base" && git apply "$PATCH_FILE")
+    sed -i 's/\r$//' "$PATCH_FILE" 2>/dev/null || true
+    if (cd "$ROOT_DIR/frameworks/base" && git apply --check --ignore-whitespace --whitespace=nowarn "$PATCH_FILE" 2>/dev/null); then
+        (cd "$ROOT_DIR/frameworks/base" && git apply --ignore-whitespace --whitespace=nowarn "$PATCH_FILE")
         echo "--> Successfully applied via git apply!"
         exit 0
     else
@@ -28,9 +29,22 @@ if [ -f "$PATCH_FILE" ] && [ -d "$ROOT_DIR/frameworks/base/.git" ] && command -v
     fi
 fi
 
+# Detect Python interpreter
+PYTHON_BIN=""
+if command -v python3 >/dev/null 2>&1; then
+    PYTHON_BIN="python3"
+elif command -v python >/dev/null 2>&1; then
+    PYTHON_BIN="python"
+fi
+
+if [ -z "$PYTHON_BIN" ]; then
+    echo "--> Warning: No python interpreter found, skipping AST transforms."
+    exit 0
+fi
+
 # 2. Direct Python Transformer for ThemedBatteryDrawable.kt
 if [ -f "$THEMED_BATTERY" ]; then
-    python3 - << 'PYEOF' || python - << 'PYEOF'
+    $PYTHON_BIN - "$THEMED_BATTERY" << 'PYEOF'
 import sys, re
 
 themed_battery_path = sys.argv[1]
@@ -70,12 +84,11 @@ with open(themed_battery_path, "w", encoding="utf-8") as f:
 
 print("--> Successfully updated ThemedBatteryDrawable.kt.")
 PYEOF
-    "$THEMED_BATTERY"
 fi
 
 # 3. Suppress external percentage text view in BatteryMeterView if present
 if [ -f "$BATTERY_VIEW" ]; then
-    python3 - << 'PYEOF' || python - << 'PYEOF'
+    $PYTHON_BIN - "$BATTERY_VIEW" << 'PYEOF'
 import sys
 
 battery_view_path = sys.argv[1]
@@ -99,12 +112,11 @@ with open(battery_view_path, "w", encoding="utf-8") as f:
     f.write(bv_content)
 print("--> Successfully updated BatteryMeterView.java.")
 PYEOF
-    "$BATTERY_VIEW"
 fi
 
 # 4. StatusIconContainer icon spacing (Wi-Fi to Cellular distance)
 if [ -f "$STATUS_CONTAINER" ]; then
-    python3 - << 'PYEOF' || python - << 'PYEOF'
+    $PYTHON_BIN - "$STATUS_CONTAINER" << 'PYEOF'
 import sys
 
 status_container_path = sys.argv[1]
@@ -136,7 +148,6 @@ if "mIconSpacing" not in sc_content:
         f.write(sc_content)
     print("--> Successfully applied 6.5dp icon spacing to StatusIconContainer.java.")
 PYEOF
-    "$STATUS_CONTAINER"
 fi
 
 echo "=== Battery & Icon Spacing Patch Application Complete ==="

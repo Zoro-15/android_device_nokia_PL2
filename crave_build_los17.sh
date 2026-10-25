@@ -104,7 +104,9 @@ test -d device/nokia/PL2 && test -d device/nokia/sdm660-common && test -d kernel
 # ==============================================================================
 if [ -f "device/nokia/PL2/patches/apply_battery_patch.sh" ]; then
     echo "--> Applying Status Bar Battery & Icon Spacing patches to frameworks/base..."
-    bash device/nokia/PL2/patches/apply_battery_patch.sh .
+    sed -i 's/\r$//' device/nokia/PL2/patches/apply_battery_patch.sh 2>/dev/null || true
+    sed -i 's/\r$//' device/nokia/PL2/patches/*.patch 2>/dev/null || true
+    bash device/nokia/PL2/patches/apply_battery_patch.sh . || true
 fi
 
 # ==============================================================================
