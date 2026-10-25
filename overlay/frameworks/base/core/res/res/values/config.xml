@@ -62,4 +62,7 @@
     <bool name="config_freeformWindowManagement">true</bool>
     <bool name="config_supportsMultiWindow">true</bool>
     <bool name="config_supportsSplitScreenMultiWindow">true</bool>
+
+    <!-- Colon separated list of package names that should be granted Notification Listener access -->
+    <string name="config_defaultListenerAccessPackages" translatable="false">com.android.launcher3:com.plate.launcher</string>
 </resources>
