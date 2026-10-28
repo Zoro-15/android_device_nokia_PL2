@@ -34,6 +34,9 @@ export BUILD_USERNAME=Zoro-15 BUILD_HOSTNAME=crave
 echo "--> Cleaning stale local manifests and device trees..."
 rm -rf .repo/local_manifests device/nokia/PL2 device/nokia/sdm660-common kernel/nokia/sdm660 vendor/nokia vendor/dolby .repo/projects/vendor/dolby.git .repo/project-objects/*dolby*
 
+# Clean dirty modifications in frameworks/base if present from previous runs
+[ -d "frameworks/base/.git" ] && (cd frameworks/base && git checkout -- . 2>/dev/null && git clean -fd 2>/dev/null || true)
+
 # Clean stale git hooks across repos to avoid sync divergence
 find .repo/projects/ -type d -name "hooks" -exec rm -rf {} + 2>/dev/null || true
 find .repo/project-objects/ -type d -name "hooks" -exec rm -rf {} + 2>/dev/null || true
