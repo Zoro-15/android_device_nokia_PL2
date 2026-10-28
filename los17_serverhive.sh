@@ -97,6 +97,16 @@ if [ ! -f "$FIRMWARE_TARGET" ] && [ -f "device/nokia/PL2/TAS2557MSSMono.bin" ]; 
 fi
 
 # ------------------------------------------------------------------------------
+# 6.5. Status Bar Battery & Icon Spacing Patches
+# ------------------------------------------------------------------------------
+if [ -f "device/nokia/PL2/patches/apply_battery_patch.sh" ]; then
+    echo "--> Applying Status Bar Battery & Icon Spacing patches to frameworks/base..."
+    sed -i 's/\r$//' device/nokia/PL2/patches/apply_battery_patch.sh 2>/dev/null || true
+    sed -i 's/\r$//' device/nokia/PL2/patches/*.patch 2>/dev/null || true
+    bash device/nokia/PL2/patches/apply_battery_patch.sh . || true
+fi
+
+# ------------------------------------------------------------------------------
 # 7. Ccache Setup
 # ------------------------------------------------------------------------------
 export USE_CCACHE=1

@@ -1,48 +1,27 @@
 From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: Zoro-15 <rajkavi4315@gmail.com>
 Date: Sat, 24 Oct 2026 17:00:00 +0530
-Subject: [PATCH] SystemUI & SettingsLib: Android 16 QPR2 Status Bar Icons & Battery Capsule
+Subject: [PATCH] SystemUI & SettingsLib: Android 16 QPR2 Status Bar Icons & Battery Capsule (LineageOS 17.1)
 
-- ThemedBatteryDrawable:
-  * Horizontal stadium capsule (35x15) with curvature radius 5.2dp
-  * Scaled terminal nipple (1.2x, 1.5x4.8dp, r=0.72) centered on Y=7.5dp
-  * Symmetrical balanced thunderbolt (X=21.5 to 29.5) spanning boundary
-  * Authentic natural charging green (#34A853) and black text
-  * Dynamic icon blackness/tint matching Wi-Fi/Cellular icons in light theme
-  * Google Sans Rounded Bold interior battery percentage typography
-- BatteryMeterView:
-  * Proportionate 35:15 (7/3) width-to-height scaling
-- StatusIconContainer:
-  * Dynamic 6.5dp inter-icon spacing offset in calculateIconTranslations
-  * Increased breathing room between Wi-Fi and Cellular signal strength icons
-
-Change-Id: I9a16qpr2statusbarall00000000000000000000000
 ---
- .../settingslib/graph/ThemedBatteryDrawable.kt| 145 ++++++++++++++-----
- .../systemui/BatteryMeterView.java            |   8 +-
- .../statusbar/phone/StatusIconContainer.java  |   6 +
- 3 files changed, 122 insertions(+), 37 deletions(-)
-
 diff --git a/packages/SettingsLib/src/com/android/settingslib/graph/ThemedBatteryDrawable.kt b/packages/SettingsLib/src/com/android/settingslib/graph/ThemedBatteryDrawable.kt
-index 327f12e..9f8a11b 100644
+index 2e7f53d..bdc7061 100644
 --- a/packages/SettingsLib/src/com/android/settingslib/graph/ThemedBatteryDrawable.kt
 +++ b/packages/SettingsLib/src/com/android/settingslib/graph/ThemedBatteryDrawable.kt
-@@ -29,6 +29,9 @@ import android.graphics.Rect
+@@ -27,6 +27,7 @@ import android.graphics.Rect
  import android.graphics.RectF
+ import android.graphics.Typeface
  import android.graphics.drawable.Drawable
- import android.util.PathParser
-+import android.graphics.Color
-+import android.graphics.Typeface
 +import java.io.File
+ import android.util.PathParser
  import android.util.TypedValue
  
- import com.android.settingslib.R
-@@ -107,6 +110,18 @@ open class ThemedBatteryDrawable(private val context: Context, frameColor: Int)
-         p.style = Paint.Style.FILL_AND_STROKE
+@@ -159,8 +160,15 @@ open class ThemedBatteryDrawable(private val context: Context, frameColor: Int)
      }
  
-+    private val textPaint = Paint(Paint.ANTI_ALIAS_FLAG).also { p ->
-+        p.textAlign = Paint.Align.CENTER
+     private val textPaint = Paint(Paint.ANTI_ALIAS_FLAG).also { p ->
+-        p.typeface = Typeface.create("sans-serif-condensed", Typeface.BOLD)
+         p.textAlign = Paint.Align.CENTER
 +        p.isDither = true
 +        val fontFile = File("/system/fonts/GoogleSansRounded-Bold.ttf")
 +        p.typeface = if (fontFile.exists()) {
@@ -51,12 +30,12 @@ index 327f12e..9f8a11b 100644
 +            Typeface.create("sans-serif", Typeface.BOLD)
 +        }
 +        p.isFakeBoldText = false
-+    }
-+
-     private val errorPaint = Paint(Paint.ANTI_ALIAS_FLAG).also { p ->
-         p.color = Utils.getColorStateListDefaultColor(context, R.color.batterymeter_plus_color)
-         p.alpha = 255
-@@ -182,72 +197,107 @@ open class ThemedBatteryDrawable(private val context: Context, frameColor: Int)
+     }
+ 
+     init {
+@@ -189,97 +197,89 @@ open class ThemedBatteryDrawable(private val context: Context, frameColor: Int)
+     }
+ 
      override fun draw(c: Canvas) {
 -        c.saveLayer(null, null)
 -        unifiedPath.reset()
@@ -74,63 +53,26 @@ index 327f12e..9f8a11b 100644
 -
 -        // The perimeter should never change
 -        unifiedPath.addPath(scaledPerimeter)
--        // If drawing dual tone, the level is used only to clip the fill
+-        // If drawing dual tone, the level is used only to clip the whole drawable path
 -        if (!dualTone) {
 -            unifiedPath.op(levelPath, Path.Op.UNION)
 -        }
 -
 -        fillPaint.color = levelColor
--
--        // Deal with unifiedPath clipping
--        if (charging) {
--            // Clip out the bolt from the body
--            unifiedPath.op(scaledBolt, Path.Op.DIFFERENCE)
--            if (!invertFillIcon) {
--                c.drawPath(scaledBolt, fillPaint)
--            }
--        }
--
--        if (dualTone) {
--            c.drawPath(unifiedPath, dualToneBackgroundFill)
--            c.save()
--            c.clipRect(0f,
--                    bounds.bottom - bounds.height() * fillFraction,
--                    bounds.right.toFloat(),
--                    bounds.bottom.toFloat())
--            c.drawPath(unifiedPath, fillPaint)
--            c.restore()
--        } else {
--            fillPaint.color = fillColor
--            c.drawPath(unifiedPath, fillPaint)
--            fillPaint.color = levelColor
--
--            // Show color for level, if found
--            if (batteryLevel <= Companion.CRITICAL_LEVEL && !charging) {
--                c.save()
--                c.clipPath(scaledFill)
--                c.drawPath(levelPath, fillPaint)
--                c.restore()
--            }
--        }
--
--        if (charging) {
--            c.drawPath(scaledBolt, fillPaint)
--        } else if (powerSaveEnabled) {
--            // If power save is enabled, draw the error color to the inside
--            c.drawPath(scaledErrorPerimeter, errorPaint)
--            // And draw the plus sign on top of the fill
--            c.drawPath(scaledPlus, errorPaint)
--        }
--        c.restore()
 +        val b = bounds
 +        val scale = b.bottom / 15f
 +        val isDarkTheme = (fillColor and 0x007fffff) > 0x00400000
-+
+ 
+-        // Deal with unifiedPath clipping before it draws
 +        // Determine colors dynamically
 +        val activeFillColor: Int
 +        val activeTextColor: Int
 +        val boltColor: Int
-+        if (charging) {
+         if (charging) {
+-            // Clip out the bolt shape
+-            unifiedPath.op(scaledBolt, Path.Op.DIFFERENCE)
+-            if (!invertFillIcon) {
+-                c.drawPath(scaledBolt, fillPaint)
 +            activeFillColor = 0xFF34A853.toInt() // Authentic Google Material Green 500
 +            activeTextColor = 0xFF383E42.toInt() // Shade 1 Refined Charcoal (Android 16 QPR2)
 +            boltColor = if (isDarkTheme) Color.WHITE else 0xFF383E42.toInt()
@@ -149,9 +91,9 @@ index 327f12e..9f8a11b 100644
 +            } else {
 +                activeFillColor = fillColor
 +                activeTextColor = Color.WHITE
-+            }
+             }
 +            boltColor = 0
-+        }
+         }
 +        fillPaint.color = activeFillColor
 +        textPaint.color = activeTextColor
 +
@@ -161,7 +103,10 @@ index 327f12e..9f8a11b 100644
 +        val pillRight = 31.5f * scale
 +        val pillBottom = 14.0f * scale
 +        val pillRadius = 4.4f * scale
-+
+ 
+-        if (dualTone) {
+-            // Dual tone means we draw the shape again, clipped to the charge level
+-            c.drawPath(unifiedPath, dualToneBackgroundFill)
 +        levelRect.set(pillLeft, pillTop, pillRight, pillBottom)
 +        unifiedPath.reset()
 +        unifiedPath.addRoundRect(levelRect, pillRadius, pillRadius, Path.Direction.CCW)
@@ -172,15 +117,45 @@ index 327f12e..9f8a11b 100644
 +            val fillFraction = batteryLevel / 100f
 +            val fillWidth = Math.max(1.5f, 25.0f * fillFraction) * scale
 +            val fillRight = pillLeft + fillWidth
-+            c.save()
+             c.save()
+-            c.clipRect(0f,
+-                    bounds.bottom - bounds.height() * fillFraction,
+-                    bounds.right.toFloat(),
+-                    bounds.bottom.toFloat())
+-            c.drawPath(unifiedPath, fillPaint)
 +            c.clipPath(unifiedPath)
 +            levelRect.set(pillLeft, pillTop, fillRight, pillBottom)
 +            c.drawRect(levelRect, fillPaint)
-+            c.restore()
-+        }
-+
+             c.restore()
+-        } else {
+-            // Non dual-tone means we draw the perimeter (with the level fill), and potentially
+-            // draw the fill again with a critical color
+-            fillPaint.color = fillColor
+-            c.drawPath(unifiedPath, fillPaint)
+-            fillPaint.color = levelColor
+-
+-            // Show colorError below this level
+-            if (batteryLevel <= Companion.CRITICAL_LEVEL && !charging) {
+-                c.save()
+-                c.clipPath(scaledFill)
+-                c.drawPath(levelPath, fillPaint)
+-                c.restore()
+-            }
+         }
+ 
 +        // 3. Right side indicator: Authentic Thunderbolt (scaled to 80% around center 25.5, 7.5)
-+        if (charging) {
+         if (charging) {
+-            c.clipOutPath(scaledBolt)
+-            if (invertFillIcon) {
+-                c.drawPath(scaledBolt, fillColorStrokePaint)
+-            } else {
+-                c.drawPath(scaledBolt, fillColorStrokeProtection)
+-            }
+-        } else if (powerSaveEnabled) {
+-            // If power save is enabled draw the perimeter path with colorError
+-            c.drawPath(scaledErrorPerimeter, errorPaint)
+-            // And draw the plus sign on top of the fill
+-            c.drawPath(scaledPlus, errorPaint)
 +            scaledBolt.reset()
 +            scaledBolt.moveTo(29.9f * scale, 11.5f * scale)
 +            scaledBolt.lineTo(30.3f * scale, 8.7f * scale)
@@ -197,8 +172,27 @@ index 327f12e..9f8a11b 100644
 +            // Stadium terminal cap: (32.2, 5.0) to (33.7, 10.0), radius 0.75 (transparent frosted)
 +            levelRect.set(32.2f * scale, 5.0f * scale, 33.7f * scale, 10.0f * scale)
 +            c.drawRoundRect(levelRect, 0.75f * scale, 0.75f * scale, dualToneBackgroundFill)
-+        }
-+
+         }
+-        c.restore()
+-
+-        if (!charging && batteryLevel < 100 && showPercent) {
+-            textPaint.textSize = bounds.height() * 0.38f
+-            val textHeight = -textPaint.fontMetrics.ascent
+-            val pctX = bounds.width() * 0.5f
+-            val pctY = (bounds.height() + textHeight) * 0.5f
+ 
+-            textPaint.color = fillColor
+-            c.drawText(batteryLevel.toString(), pctX, pctY, textPaint)
+-
+-            textPaint.color = fillColor.toInt().inv() or 0xFF000000.toInt()
+-            c.save()
+-            c.clipRect(fillRect.left,
+-                    fillRect.top + (fillRect.height() * (1 - fillFraction)),
+-                    fillRect.right,
+-                    fillRect.bottom)
+-            c.drawText(batteryLevel.toString(), pctX, pctY, textPaint)
+-            c.restore()
+-        }
 +        // 4. Centered Large Bold Text (Google Sans Rounded Bold)
 +        textPaint.textSize = (if (batteryLevel == 100) 9.8f else 11.0f) * scale
 +        val textX = 18.50f * scale
@@ -207,9 +201,21 @@ index 327f12e..9f8a11b 100644
 +        c.drawText(batteryLevel.toString(), textX, textY, textPaint)
      }
  
-+    override fun setColors(fg: Int, bg: Int, singleTone: Int) {
-+        fillColor = fg
-+        backgroundColor = bg
+     private fun batteryColorForLevel(level: Int): Int {
+@@ -369,17 +369,18 @@ open class ThemedBatteryDrawable(private val context: Context, frameColor: Int)
+     }
+ 
+     fun setColors(fgColor: Int, bgColor: Int, singleToneColor: Int) {
+-        fillColor = if (dualTone) fgColor else singleToneColor
+-
+-        fillPaint.color = fillColor
+-        fillColorStrokePaint.color = fillColor
+-
++        fillColor = fgColor
+         backgroundColor = bgColor
+-        dualToneBackgroundFill.color = bgColor
+-
+-        // Also update the level color, since fillColor may have changed
 +        val isDarkTheme = (fillColor and 0x007fffff) > 0x00400000
 +        if (isDarkTheme) {
 +            dualToneBackgroundFill.color = Color.WHITE
@@ -219,10 +225,13 @@ index 327f12e..9f8a11b 100644
 +            dualToneBackgroundFill.alpha = 0x4D
 +        }
 +        fillPaint.color = fillColor
-+        levelColor = batteryColorForLevel(batteryLevel)
-+        invalidateSelf()
-+    }
-+
+         levelColor = batteryColorForLevel(batteryLevel)
+-
+         invalidateSelf()
+     }
+ 
+@@ -443,8 +444,8 @@ open class ThemedBatteryDrawable(private val context: Context, frameColor: Int)
+ 
      companion object {
          private const val TAG = "ThemedBatteryDrawable"
 -        private const val WIDTH = 12f
@@ -230,55 +239,84 @@ index 327f12e..9f8a11b 100644
 +        private const val WIDTH = 35f
 +        private const val HEIGHT = 15f
          private const val CRITICAL_LEVEL = 15
+         // On a 12x20 grid, how wide to make the fill protection stroke.
+         // Scales when our size changes
 diff --git a/packages/SystemUI/src/com/android/systemui/BatteryMeterView.java b/packages/SystemUI/src/com/android/systemui/BatteryMeterView.java
-index a12bc34..e87fe21 100644
+index 80aed81..4671da1 100644
 --- a/packages/SystemUI/src/com/android/systemui/BatteryMeterView.java
 +++ b/packages/SystemUI/src/com/android/systemui/BatteryMeterView.java
-@@ -160,5 +160,5 @@ public class BatteryMeterView extends LinearLayout implements
-         int resHeight = getResources().getDimensionPixelSize(R.dimen.status_bar_battery_icon_height);
--        int resWidth = getResources().getDimensionPixelSize(R.dimen.status_bar_battery_icon_width);
+@@ -157,9 +157,9 @@ public class BatteryMeterView extends LinearLayout implements
+                 com.android.internal.R.string.status_bar_battery);
+         mBatteryIconView = new ImageView(context);
+         mBatteryIconView.setImageDrawable(mThemedDrawable);
+-        final MarginLayoutParams mlp = new MarginLayoutParams(
+-                getResources().getDimensionPixelSize(R.dimen.status_bar_battery_icon_width),
+-                getResources().getDimensionPixelSize(R.dimen.status_bar_battery_icon_height));
++        int resHeight = getResources().getDimensionPixelSize(R.dimen.status_bar_battery_icon_height);
 +        int resWidth = (resHeight * 7) / 3;
-         MarginLayoutParams mlp = new MarginLayoutParams(resWidth, resHeight);
-         mlp.setMargins(0, 0, 0, getResources().getDimensionPixelOffset(R.dimen.battery_margin_bottom));
++        final MarginLayoutParams mlp = new MarginLayoutParams(resWidth, resHeight);
+         mlp.setMargins(0, 0, 0,
+                 getResources().getDimensionPixelOffset(R.dimen.battery_margin_bottom));
          addView(mBatteryIconView, mlp);
-@@ -465,5 +465,5 @@ public class BatteryMeterView extends LinearLayout implements
+@@ -405,6 +405,10 @@ public class BatteryMeterView extends LinearLayout implements
+     }
+ 
+     private void updateShowPercent() {
++        if (mBatteryPercentView != null) {
++            mBatteryPercentView.setVisibility(View.GONE);
++            return;
++        }
+         final boolean showing = mBatteryPercentView != null;
+         final int showBatteryPercent = LineageSettings.System.getIntForUser(
+                 getContext().getContentResolver(), STATUS_BAR_SHOW_BATTERY_PERCENT, 0, mUser);
+@@ -463,7 +467,7 @@ public class BatteryMeterView extends LinearLayout implements
          int batteryHeight = res.getDimensionPixelSize(R.dimen.status_bar_battery_icon_height);
-         int batteryWidth = mBatteryStyle == BATTERY_STYLE_CIRCLE
-                 ? res.getDimensionPixelSize(R.dimen.status_bar_battery_icon_circle_width)
--                : res.getDimensionPixelSize(R.dimen.status_bar_battery_icon_width);
-+                : (batteryHeight * 7) / 3;
+         int batteryWidth = mBatteryStyle == BATTERY_STYLE_CIRCLE ?
+                 res.getDimensionPixelSize(R.dimen.status_bar_battery_icon_circle_width) :
+-                res.getDimensionPixelSize(R.dimen.status_bar_battery_icon_width);
++                (batteryHeight * 7) / 3;
          int marginBottom = res.getDimensionPixelSize(R.dimen.battery_margin_bottom);
+ 
+         LinearLayout.LayoutParams scaledLayoutParams = new LinearLayout.LayoutParams(
 diff --git a/packages/SystemUI/src/com/android/systemui/statusbar/phone/StatusIconContainer.java b/packages/SystemUI/src/com/android/systemui/statusbar/phone/StatusIconContainer.java
-index 1234567..89abcdef 100644
+index d061649..ceefc6b 100644
 --- a/packages/SystemUI/src/com/android/systemui/statusbar/phone/StatusIconContainer.java
 +++ b/packages/SystemUI/src/com/android/systemui/statusbar/phone/StatusIconContainer.java
-@@ -48,6 +48,7 @@ public class StatusIconContainer extends AlphaOptimizedLinearLayout implements
+@@ -33,6 +33,7 @@ import android.view.View;
+ import com.android.keyguard.AlphaOptimizedLinearLayout;
+ import com.android.systemui.R;
+ import com.android.systemui.statusbar.StatusIconDisplayable;
++import com.android.systemui.statusbar.StatusBarWifiView;
+ import com.android.systemui.statusbar.notification.stack.AnimationFilter;
+ import com.android.systemui.statusbar.notification.stack.AnimationProperties;
+ import com.android.systemui.statusbar.notification.stack.ViewState;
+@@ -58,6 +59,7 @@ public class StatusIconContainer extends AlphaOptimizedLinearLayout {
      private int mDotPadding;
      private int mStaticDotDiameter;
      private int mUnderflowWidth;
 +    private float mIconSpacing;
- 
-     public StatusIconContainer(Context context) {
-         this(context, null);
-@@ -102,6 +103,7 @@ public class StatusIconContainer extends AlphaOptimizedLinearLayout implements
-         mStaticDotDiameter = 2 * getResources().getDimensionPixelSize(
-                 R.dimen.overflow_dot_radius);
-         mUnderflowWidth = mIconDotFrameWidth + (mStaticDotDiameter + mDotPadding) * 0;
+     private int mUnderflowStart = 0;
+     // Whether or not we can draw into the underflow space
+     private boolean mNeedsUnderflow;
+@@ -102,6 +104,7 @@ public class StatusIconContainer extends AlphaOptimizedLinearLayout {
+         int radius = getResources().getDimensionPixelSize(R.dimen.overflow_dot_radius);
+         mStaticDotDiameter = 2 * radius;
+         mUnderflowWidth = mIconDotFrameWidth + (MAX_DOTS - 1) * (mStaticDotDiameter + mDotPadding);
 +        mIconSpacing = getResources().getDisplayMetrics().density * 6.5f;
      }
  
      @Override
-@@ -176,6 +178,7 @@ public class StatusIconContainer extends AlphaOptimizedLinearLayout implements
+@@ -178,6 +181,7 @@ public class StatusIconContainer extends AlphaOptimizedLinearLayout {
              } else {
-                 contentWidth += getViewTotalMeasuredWidth(child);
+                 totalWidth += getViewTotalMeasuredWidth(child);
              }
-+            contentWidth += (int) mIconSpacing;
++            totalWidth += (int) mIconSpacing;
          }
  
          if (mode == MeasureSpec.EXACTLY) {
-@@ -290,6 +293,11 @@ public class StatusIconContainer extends AlphaOptimizedLinearLayout implements
-             state.xTranslation = translationX - getViewTotalWidth(child);
-             mLayoutStates.add(0, state);
+@@ -289,6 +293,11 @@ public class StatusIconContainer extends AlphaOptimizedLinearLayout {
+             mLayoutStates.add(0, childState);
+ 
              translationX -= getViewTotalWidth(child);
 +            if (child instanceof StatusBarWifiView) {
 +                translationX += getResources().getDisplayMetrics().density * 2.5f;
@@ -287,6 +325,4 @@ index 1234567..89abcdef 100644
 +            }
          }
  
-         int totalVisible = mLayoutStates.size();
--- 
-2.39.5
+         // Show either 1-MAX_ICONS icons, or (MAX_ICONS - 1) icons + overflow
