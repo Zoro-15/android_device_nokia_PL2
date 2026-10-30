@@ -1,23 +1,20 @@
 #!/bin/bash
-set -e -x
+set -e
 
-# ==============================================================================
-# Nokia 6.1 (PL2 / TA-1089) LineageOS 17.1 (Android 10 Q) Crave Build Script
-# Hosted in: Zoro-15/android_device_nokia_PL2 (branch: lineage-17.1)
-# ==============================================================================
+# Setup working directory if CRAVE_WORKDIR is provided
 WORKDIR="${CRAVE_WORKDIR:-$PWD}"
 mkdir -p "$WORKDIR" 2>/dev/null || true
 cd "$WORKDIR"
-echo "=== Starting Nokia 6.1 (PL2) LineageOS 17.1 (Android 10 Q) Build ==="
 
-# Repo Tool bootstrap if missing
+# Repo tool bootstrap if missing
 if ! command -v repo >/dev/null 2>&1; then
-    mkdir -p "$HOME/bin" && curl -L https://storage.googleapis.com/git-repo-downloads/repo -o "$HOME/bin/repo" && chmod a+rx "$HOME/bin/repo" && export PATH="$HOME/bin:$PATH"
+    mkdir -p "$HOME/bin"
+    curl -sL https://storage.googleapis.com/git-repo-downloads/repo -o "$HOME/bin/repo"
+    chmod a+rx "$HOME/bin/repo"
+    export PATH="$HOME/bin:$PATH"
 fi
 
-# ==============================================================================
-# PHASE 1: EXECUTION, MEMORY & COMPILER GUARDS
-# ==============================================================================
+# Environment setup
 export GOMEMLIMIT=10GiB
 export GOGC=50
 export _JAVA_OPTIONS="-Xmx10g"
@@ -26,27 +23,23 @@ export SOONG_ALLOW_MISSING_DEPENDENCIES=true
 export WITHOUT_CHECK_API=true
 export SKIP_ABI_CHECKS=true
 export SELINUX_IGNORE_NEVERALLOWS=true
-export BUILD_USERNAME=Zoro-15 BUILD_HOSTNAME=crave
+export BUILD_USERNAME=Zoro-15
+export BUILD_HOSTNAME=crave
 
-# ==============================================================================
-# PHASE 2: PRE-FLIGHT CLEANUP (SAFE FOR CRAVE)
-# ==============================================================================
-echo "--> Cleaning stale local manifests and device trees..."
+# Clean stale manifests and trees
 rm -rf .repo/local_manifests device/nokia/PL2 device/nokia/sdm660-common kernel/nokia/sdm660 vendor/nokia vendor/dolby .repo/projects/vendor/dolby.git .repo/project-objects/*dolby*
 
-# Clean dirty modifications in frameworks/base if present from previous runs
+# Reset modified frameworks/base files if dirty
 [ -d "frameworks/base/.git" ] && (cd frameworks/base && git checkout -- . 2>/dev/null && git clean -fd 2>/dev/null || true)
 
-# Clean stale git hooks across repos to avoid sync divergence
+# Remove stale git hooks
 find .repo/projects/ -type d -name "hooks" -exec rm -rf {} + 2>/dev/null || true
 find .repo/project-objects/ -type d -name "hooks" -exec rm -rf {} + 2>/dev/null || true
 
-# ==============================================================================
-# PHASE 3: MANIFEST INITIALIZATION & CRAVE ACCELERATED RESYNC
-# ==============================================================================
-echo "--> Initializing LineageOS 17.1 (Android 10 Q) manifest..."
+# Initialize LineageOS 17.1 manifest
 repo init -u https://github.com/LineageOS-Revived/android.git -b lineage-17.1 --git-lfs --depth=1
 
+# Configure PL2 local manifest
 mkdir -p .repo/local_manifests
 if [ -f "device/nokia/PL2/lineage_pl2.xml" ]; then
     cp device/nokia/PL2/lineage_pl2.xml .repo/local_manifests/nokia.xml
@@ -63,11 +56,11 @@ else
 XML
 fi
 
-# Crave resync + source sync
+# Sync sources
 if [ -f /usr/bin/resync ]; then /usr/bin/resync; else /opt/crave/resync.sh; fi
 repo sync -c --force-sync --force-remove-dirty --no-tags --no-clone-bundle --prune -j$(nproc)
 
-# Fallback direct clones if not synced
+# Fallback clones if sync missed any repo
 [ ! -d "device/nokia/PL2" ] && git clone --depth=1 -b lineage-17.1 https://github.com/Zoro-15/android_device_nokia_PL2.git device/nokia/PL2
 [ ! -d "device/nokia/sdm660-common" ] && git clone --depth=1 -b lineage-17.1 https://github.com/Zoro-15/android_device_nokia_sdm660-common.git device/nokia/sdm660-common
 [ ! -d "kernel/nokia/sdm660" ] && git clone --depth=1 -b lineage-17.1 https://github.com/Zoro-15/android_kernel_nokia_sdm660.git kernel/nokia/sdm660
@@ -83,149 +76,60 @@ if [ ! -f /usr/lib/x86_64-linux-gnu/libncurses.so.5 ] || [ ! -f /usr/lib/x86_64-
     [ -n "$T" ] && [ -n "$N" ] && wget -q "$P/$T" -O /tmp/tinfo.deb && wget -q "$P/$N" -O /tmp/ncurses.deb && sudo apt-get install -y /tmp/tinfo.deb /tmp/ncurses.deb && rm -f /tmp/tinfo.deb /tmp/ncurses.deb || true
 fi
 
-# Fallback check for Qualcomm SEPolicy legacy dependency
+# Fallback check for Qualcomm sepolicy legacy dependency
 if [ ! -d "device/qcom/sepolicy-legacy-um" ]; then
-    echo "--> Pulling missing device/qcom/sepolicy-legacy-um..."
     git clone --depth=1 -b lineage-17.1 https://github.com/LineageOS-Revived/android_device_qcom_sepolicy-legacy-um.git device/qcom/sepolicy-legacy-um
 fi
 
-# ==============================================================================
-# PHASE 4: HARDWARE INTEGRITY & DSP FIRMWARE
-# ==============================================================================
-echo "--> Verifying TAS2557 SmartAmp DSP firmware..."
+# TAS2557 SmartAmp DSP firmware check
 FIRMWARE_TARGET="vendor/nokia/sdm660-common/proprietary/vendor/firmware/TAS2557MSSMono.bin"
 if [ ! -f "$FIRMWARE_TARGET" ]; then
     mkdir -p "$(dirname "$FIRMWARE_TARGET")"
     [ -f "device/nokia/PL2/TAS2557MSSMono.bin" ] && cp device/nokia/PL2/TAS2557MSSMono.bin "$FIRMWARE_TARGET"
 fi
 
-# Verify required repos
+# Verify required trees exist
 test -d device/nokia/PL2 && test -d device/nokia/sdm660-common && test -d kernel/nokia/sdm660 && test -d vendor/nokia
 
-# ==============================================================================
-# PHASE 4.5: STATUS BAR BATTERY & ICON SPACING PATCHES
-# ==============================================================================
+# Apply status bar battery and icon spacing patches
 if [ -f "device/nokia/PL2/patches/apply_battery_patch.sh" ]; then
-    echo "--> Applying Status Bar Battery & Icon Spacing patches to frameworks/base..."
     sed -i 's/\r$//' device/nokia/PL2/patches/apply_battery_patch.sh 2>/dev/null || true
     sed -i 's/\r$//' device/nokia/PL2/patches/*.patch 2>/dev/null || true
     bash device/nokia/PL2/patches/apply_battery_patch.sh . || true
 fi
 
-# ==============================================================================
-# PHASE 5: CCACHE & BUILD TARGET SETUP
-# ==============================================================================
-if [ -x prebuilts/misc/linux-x86/ccache/ccache ]; then
-    export USE_CCACHE=1 CCACHE_EXEC="$PWD/prebuilts/misc/linux-x86/ccache/ccache" CCACHE_DIR="$HOME/.ccache"
-    "$CCACHE_EXEC" -M 50G 2>/dev/null || true
-fi
-
-set +e
-source build/envsetup.sh
-set -e
-
-# Clean cached kernel objects and boot images
-echo "--> Cleaning cached KERNEL_OBJ and boot image artifacts..."
+# Clean prior intermediate files
 rm -rf out/target/product/PL2/obj/KERNEL_OBJ
 rm -rf out/target/product/PL2/boot.img out/target/product/PL2/recovery.img
 
+# Setup build environment and compile
+source build/envsetup.sh
 lunch lineage_PL2-userdebug
 make installclean
-echo "--> Compiling LineageOS 17.1 target image..."
 mka bacon -j$(nproc --all)
 
-# ==============================================================================
-# PHASE 6: ARTIFACT DISCOVERY, CHECKSUM & CLOUD UPLOAD
-# ==============================================================================
-echo "========================================================"
-echo "--> Locating LineageOS ROM artifact..."
-echo "========================================================"
+# Locate final ROM zip
+PRODUCT_OUT="out/target/product/PL2"
+ROM_ZIP=$(ls -t "$PRODUCT_OUT"/lineage-17.1-*.zip 2>/dev/null | head -n 1)
+[ -z "$ROM_ZIP" ] && ROM_ZIP=$(ls -t "$PRODUCT_OUT"/*.zip 2>/dev/null | grep -ivE 'ota|target_files' | head -n 1)
 
-PRODUCT_OUT="$PWD/out/target/product/PL2"
-if [ ! -d "$PRODUCT_OUT" ]; then
-    echo "ERROR: Product output directory not found: $PRODUCT_OUT"
+if [ -z "$ROM_ZIP" ] || [ ! -f "$ROM_ZIP" ]; then
+    echo "Build failed: ROM zip not found in $PRODUCT_OUT"
     exit 1
 fi
 
-ROM_ZIP=$(find "$PRODUCT_OUT" -maxdepth 1 -type f -name "*.zip" \
-    ! -name "*ota*" \
-    ! -name "*OTA*" \
-    ! -name "*target_files*" \
-    ! -name "*.json" \
-    ! -name "*.sha256sum" \
-    -printf "%T@ %p\n" 2>/dev/null \
-    | sort -n \
-    | tail -1 \
-    | cut -d' ' -f2-)
+echo "ROM build complete: $(basename "$ROM_ZIP")"
+sha256sum "$ROM_ZIP" | tee "${ROM_ZIP}.sha256sum"
 
-if [ -z "$ROM_ZIP" ] || [ ! -f "$ROM_ZIP" ]; then
-    ROM_ZIP=$(find "$PRODUCT_OUT" -maxdepth 1 -type f -name "*.zip" \
-        ! -name "*.json" \
-        ! -name "*.sha256sum" \
-        -printf "%T@ %p\n" 2>/dev/null \
-        | sort -n \
-        | tail -1 \
-        | cut -d' ' -f2-)
-fi
-
-if [ -z "$ROM_ZIP" ] || [ ! -f "$ROM_ZIP" ]; then
-    echo "ERROR: No ROM ZIP found in $PRODUCT_OUT"
-    find "$PRODUCT_OUT" -maxdepth 1 -type f -printf '%f\n' | sort
-    exit 1
-fi
-
-ROM_NAME="$(basename "$ROM_ZIP")"
-echo "--> ROM found: $ROM_NAME"
-ls -lh "$ROM_ZIP"
-
-SHA_FILE="${ROM_ZIP}.sha256sum"
-sha256sum "$ROM_ZIP" > "$SHA_FILE"
-echo "--> SHA-256:"
-cat "$SHA_FILE"
-
-# ------------------------------------------------------------------------------
-# Upload ROM to temp.sh with 30-minute safety timeout guard
-# ------------------------------------------------------------------------------
-echo
-echo "========================================================"
-echo "--> Uploading ROM artifact to temp.sh..."
-echo "========================================================"
-
-TEMP_URL_FILE="$PRODUCT_OUT/${ROM_NAME}.download-url.txt"
-
-set +e
-TEMP_URL=$(
-    curl --fail --silent --show-error --max-time 1800 \
-        -F "file=@${ROM_ZIP}" \
-        https://temp.sh/upload 2>/dev/null
-)
-set -e
+# Upload ROM artifact to temp.sh
+TEMP_URL=$(curl -s --fail --max-time 1800 -F "file=@${ROM_ZIP}" https://temp.sh/upload 2>/dev/null || true)
 
 if [ -n "$TEMP_URL" ] && [[ "$TEMP_URL" == *"http"* ]]; then
-    echo "$TEMP_URL" | tee "$TEMP_URL_FILE"
-    echo "$TEMP_URL" > "${ROM_ZIP}.temp.sh.url"
-
-    echo
+    echo "$TEMP_URL" > "${ROM_ZIP}.download-url.txt"
     echo "========================================================"
-    echo "--> DOWNLOAD URL:"
-    echo "$TEMP_URL"
+    echo "DOWNLOAD URL: $TEMP_URL"
     echo "========================================================"
 else
-    echo
-    echo "WARNING: temp.sh upload failed or timed out."
-    echo "The ROM build itself is 100% SUCCESSFUL."
-    echo "Retrieve the file from devspace using: crave pull out/target/product/PL2/*.zip"
+    echo "Upload failed or timed out. Pull manually with:"
+    echo "crave pull out/target/product/PL2/*.zip"
 fi
-
-# ------------------------------------------------------------------------------
-# Final artifact summary
-# ------------------------------------------------------------------------------
-echo
-echo "========================================================"
-echo "BUILD ARTIFACT SUMMARY"
-echo "========================================================"
-echo "ROM:      $ROM_ZIP"
-echo "SHA256:   $SHA_FILE"
-echo "URL FILE: $TEMP_URL_FILE"
-echo "========================================================"
-echo "=== LineageOS 17.1 Build Finished Successfully! ==="
