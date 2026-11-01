@@ -42,6 +42,12 @@ on property:sys.boot_completed=1
          -exec /vendor/bin/toybox_vendor setfattr -x security.sehash {} \;
     restorecon_recursive /data/system/users/
 
+# Auto-enable PLate.Launcher Accessibility Service on first boot for Desktop Mode QS tile
+on property:sys.boot_completed=1 && property:persist.sys.plate_init!=1
+    exec - root -- /system/bin/settings put secure enabled_accessibility_services com.plate.launcher/com.plate.launcher.services.DockService
+    exec - root -- /system/bin/settings put secure accessibility_enabled 1
+    setprop persist.sys.plate_init 1
+
 on property:ro.boot.simslot=1
     setprop persist.radio.multisim.config ss
 

@@ -2,10 +2,10 @@
 *.sh text eol=lf
 *.patch text eol=lf
 *.py text eol=lf
-*.xml text
+*.xml text eol=lf
 *.mk text
 *.prop text
-*.rc text
+*.rc text eol=lf
 *.te text
 *.bp text
 *.java text

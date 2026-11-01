@@ -22,5 +22,8 @@
 
         <!-- Power Controls -->
         <permission name="android.permission.REBOOT" />
+
+        <!-- Video Capture for Desktop Projection / Freeform -->
+        <permission name="android.permission.CAPTURE_VIDEO_OUTPUT" />
     </privapp-permissions>
 </permissions>
