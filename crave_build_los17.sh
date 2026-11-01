@@ -94,12 +94,6 @@ fi
 # Verify required trees exist
 test -d device/nokia/PL2 && test -d device/nokia/sdm660-common && test -d kernel/nokia/sdm660 && test -d vendor/nokia && test -d frameworks/base
 
-# Apply status bar battery and icon spacing patches
-if [ -f "device/nokia/PL2/patches/apply_battery_patch.sh" ]; then
-    sed -i 's/\r$//' device/nokia/PL2/patches/apply_battery_patch.sh 2>/dev/null || true
-    sed -i 's/\r$//' device/nokia/PL2/patches/*.patch 2>/dev/null || true
-    bash device/nokia/PL2/patches/apply_battery_patch.sh . || true
-fi
 
 # Clean prior intermediate files
 rm -rf out/target/product/PL2/obj/KERNEL_OBJ
