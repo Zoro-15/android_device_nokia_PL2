@@ -31,6 +31,9 @@ TARGET_BOOTLOADER_BOARD_NAME := sdm630
 # Display
 TARGET_SCREEN_DENSITY := 420
 
+# HIDL
+DEVICE_MANIFEST_FILE += $(DEVICE_PATH)/manifest.xml
+
 # Kernel
 TARGET_KERNEL_CONFIG += vendor/nokia/PL2.config
 
