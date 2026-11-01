@@ -29,8 +29,16 @@ export BUILD_HOSTNAME=crave
 # Clean stale manifests and trees
 rm -rf .repo/local_manifests device/nokia/PL2 device/nokia/sdm660-common kernel/nokia/sdm660 vendor/nokia vendor/dolby .repo/projects/vendor/dolby.git .repo/project-objects/*dolby*
 
-# Reset modified frameworks/base files if dirty
-[ -d "frameworks/base/.git" ] && (cd frameworks/base && git checkout -- . 2>/dev/null && git clean -fd 2>/dev/null || true)
+# Check frameworks/base git origin: purge if tracking LineageOS, reset if dirty Zoro-15
+if [ -d "frameworks/base/.git" ]; then
+    FB_ORIGIN=$(git -C frameworks/base config --get remote.origin.url 2>/dev/null || true)
+    if [[ "$FB_ORIGIN" != *"Zoro-15/android_frameworks_base"* ]]; then
+        echo "Stale LineageOS frameworks/base detected: purging to force Zoro-15 sync..."
+        rm -rf frameworks/base .repo/projects/frameworks/base.git .repo/project-objects/*frameworks*base*
+    else
+        (cd frameworks/base && git checkout -- . 2>/dev/null && git clean -fd 2>/dev/null || true)
+    fi
+fi
 
 # Remove stale git hooks
 find .repo/projects/ -type d -name "hooks" -exec rm -rf {} + 2>/dev/null || true
@@ -67,7 +75,11 @@ repo sync -c --force-sync --force-remove-dirty --no-tags --no-clone-bundle --pru
 [ ! -d "device/nokia/sdm660-common" ] && git clone --depth=1 -b lineage-17.1 https://github.com/Zoro-15/android_device_nokia_sdm660-common.git device/nokia/sdm660-common
 [ ! -d "kernel/nokia/sdm660" ] && git clone --depth=1 -b lineage-17.1 https://github.com/Zoro-15/android_kernel_nokia_sdm660.git kernel/nokia/sdm660
 [ ! -d "vendor/nokia" ] && git clone --depth=1 -b lineage-17.1 https://github.com/Zoro-15/proprietary_vendor_nokia.git vendor/nokia
-[ ! -d "frameworks/base" ] && git clone --depth=1 -b lineage-17.1 https://github.com/Zoro-15/android_frameworks_base.git frameworks/base
+if [ ! -d "frameworks/base" ]; then
+    git clone --depth=1 -b lineage-17.1 https://github.com/Zoro-15/android_frameworks_base.git frameworks/base
+else
+    (cd frameworks/base && git fetch origin lineage-17.1 2>/dev/null || true && git checkout lineage-17.1 2>/dev/null || true && git reset --hard origin/lineage-17.1 2>/dev/null || true)
+fi
 
 # Legacy ncurses dependencies for Android 10 host tools
 if [ ! -f /usr/lib/x86_64-linux-gnu/libncurses.so.5 ] || [ ! -f /usr/lib/x86_64-linux-gnu/libtinfo.so.5 ]; then
@@ -93,6 +105,11 @@ fi
 
 # Verify required trees exist
 test -d device/nokia/PL2 && test -d device/nokia/sdm660-common && test -d kernel/nokia/sdm660 && test -d vendor/nokia && test -d frameworks/base
+
+echo "========================================================"
+echo "FRAMEWORKS/BASE NATIVE COMMIT VERIFICATION:"
+git -C frameworks/base log -1 --oneline
+echo "========================================================"
 
 
 # Clean prior intermediate files
