@@ -52,6 +52,8 @@ else
   <project path="device/nokia/sdm660-common" name="android_device_nokia_sdm660-common" remote="zoro"/>
   <project path="kernel/nokia/sdm660" name="android_kernel_nokia_sdm660" remote="zoro"/>
   <project path="vendor/nokia" name="proprietary_vendor_nokia" remote="zoro"/>
+  <remove-project name="LineageOS/android_frameworks_base"/>
+  <project path="frameworks/base" name="android_frameworks_base" remote="zoro"/>
 </manifest>
 XML
 fi
@@ -65,6 +67,7 @@ repo sync -c --force-sync --force-remove-dirty --no-tags --no-clone-bundle --pru
 [ ! -d "device/nokia/sdm660-common" ] && git clone --depth=1 -b lineage-17.1 https://github.com/Zoro-15/android_device_nokia_sdm660-common.git device/nokia/sdm660-common
 [ ! -d "kernel/nokia/sdm660" ] && git clone --depth=1 -b lineage-17.1 https://github.com/Zoro-15/android_kernel_nokia_sdm660.git kernel/nokia/sdm660
 [ ! -d "vendor/nokia" ] && git clone --depth=1 -b lineage-17.1 https://github.com/Zoro-15/proprietary_vendor_nokia.git vendor/nokia
+[ ! -d "frameworks/base" ] && git clone --depth=1 -b lineage-17.1 https://github.com/Zoro-15/android_frameworks_base.git frameworks/base
 
 # Legacy ncurses dependencies for Android 10 host tools
 if [ ! -f /usr/lib/x86_64-linux-gnu/libncurses.so.5 ] || [ ! -f /usr/lib/x86_64-linux-gnu/libtinfo.so.5 ]; then
@@ -89,7 +92,7 @@ if [ ! -f "$FIRMWARE_TARGET" ]; then
 fi
 
 # Verify required trees exist
-test -d device/nokia/PL2 && test -d device/nokia/sdm660-common && test -d kernel/nokia/sdm660 && test -d vendor/nokia
+test -d device/nokia/PL2 && test -d device/nokia/sdm660-common && test -d kernel/nokia/sdm660 && test -d vendor/nokia && test -d frameworks/base
 
 # Apply status bar battery and icon spacing patches
 if [ -f "device/nokia/PL2/patches/apply_battery_patch.sh" ]; then
