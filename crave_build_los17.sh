@@ -144,28 +144,12 @@ lunch lineage_PL2-userdebug
 make installclean
 mka bacon -j$(nproc --all)
 
-# Locate final ROM zip
-PRODUCT_OUT="out/target/product/PL2"
-ROM_ZIP=$(ls -t "$PRODUCT_OUT"/lineage-17.1-*.zip 2>/dev/null | head -n 1)
-[ -z "$ROM_ZIP" ] && ROM_ZIP=$(ls -t "$PRODUCT_OUT"/*.zip 2>/dev/null | grep -ivE 'ota|target_files' | head -n 1)
-
-if [ -z "$ROM_ZIP" ] || [ ! -f "$ROM_ZIP" ]; then
-    echo "Build failed: ROM zip not found in $PRODUCT_OUT"
-    exit 1
-fi
-
-echo "ROM build complete: $(basename "$ROM_ZIP")"
-sha256sum "$ROM_ZIP" | tee "${ROM_ZIP}.sha256sum"
-
-# Upload ROM artifact to temp.sh
-TEMP_URL=$(curl -s --fail --max-time 1800 -F "file=@${ROM_ZIP}" https://temp.sh/upload 2>/dev/null || true)
-
-if [ -n "$TEMP_URL" ] && [[ "$TEMP_URL" == *"http"* ]]; then
-    echo "$TEMP_URL" > "${ROM_ZIP}.download-url.txt"
-    echo "========================================================"
-    echo "DOWNLOAD URL: $TEMP_URL"
-    echo "========================================================"
+# Upload ROM artifact to gofile
+cd out/target/product/PL2
+ROM_ZIP=$(ls -t lineage*.zip 2>/dev/null | grep -ivE 'ota|target_files' | head -n 1)
+if [ -n "$ROM_ZIP" ] && [ -f "$ROM_ZIP" ]; then
+    echo "ROM build complete: $ROM_ZIP"
+    curl -F "file=@${ROM_ZIP}" https://upload.gofile.io/uploadfile
 else
-    echo "Upload failed or timed out. Pull manually with:"
-    echo "crave pull out/target/product/PL2/*.zip"
+    echo "ROM zip not found in out/target/product/PL2"
 fi
