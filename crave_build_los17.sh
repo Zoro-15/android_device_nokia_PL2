@@ -87,7 +87,11 @@ if [ -f /usr/bin/resync ]; then /usr/bin/resync; else /opt/crave/resync.sh; fi
 repo sync -c --force-sync --force-remove-dirty --no-tags --no-clone-bundle --prune -j$(nproc)
 
 # Fallback clones if sync missed any repo
-[ ! -d "device/nokia/PL2" ] && git clone --depth=1 -b lineage-17.1 https://github.com/Zoro-15/android_device_nokia_PL2.git device/nokia/PL2
+if [ ! -d "device/nokia/PL2" ]; then
+    git clone --depth=1 -b lineage-17.1 https://github.com/Zoro-15/android_device_nokia_PL2.git device/nokia/PL2
+else
+    (cd device/nokia/PL2 && git fetch origin lineage-17.1 2>/dev/null || true && git checkout lineage-17.1 2>/dev/null || true && git reset --hard origin/lineage-17.1 2>/dev/null || true)
+fi
 [ ! -d "device/nokia/sdm660-common" ] && git clone --depth=1 -b lineage-17.1 https://github.com/Zoro-15/android_device_nokia_sdm660-common.git device/nokia/sdm660-common
 [ ! -d "kernel/nokia/sdm660" ] && git clone --depth=1 -b lineage-17.1 https://github.com/Zoro-15/android_kernel_nokia_sdm660.git kernel/nokia/sdm660
 [ ! -d "vendor/nokia" ] && git clone --depth=1 -b lineage-17.1 https://github.com/Zoro-15/proprietary_vendor_nokia.git vendor/nokia
@@ -128,6 +132,14 @@ fi
 # Verify required trees exist
 test -d device/nokia/PL2 && test -d device/nokia/sdm660-common && test -d kernel/nokia/sdm660 && test -d vendor/nokia && test -d frameworks/base
 
+echo "========================================================"
+echo "DEVICE/NOKIA/PL2 NATIVE COMMIT VERIFICATION:"
+git -C device/nokia/PL2 log -1 --oneline
+if [ -f "device/nokia/PL2/prebuilt/PLateLauncher/PLateLauncher.apk" ]; then
+    echo "PLateLauncher prebuilt APK: Present ($(ls -lh device/nokia/PL2/prebuilt/PLateLauncher/PLateLauncher.apk | awk '{print $5}'))"
+else
+    echo "ERROR: PLateLauncher prebuilt APK NOT FOUND!"
+fi
 echo "========================================================"
 echo "FRAMEWORKS/BASE NATIVE COMMIT VERIFICATION:"
 git -C frameworks/base log -1 --oneline
