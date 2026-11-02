@@ -6,6 +6,12 @@ WORKDIR="${CRAVE_WORKDIR:-$PWD}"
 mkdir -p "$WORKDIR" 2>/dev/null || true
 cd "$WORKDIR"
 
+# Ensure workspace git state is clean so git pull/rebase never blocks
+if [ -d ".git" ]; then
+    git reset --hard HEAD 2>/dev/null || true
+    git clean -fd 2>/dev/null || true
+fi
+
 # Repo tool bootstrap if missing
 if ! command -v repo >/dev/null 2>&1; then
     mkdir -p "$HOME/bin"
@@ -29,12 +35,12 @@ export BUILD_HOSTNAME=crave
 # Clean stale manifests and trees
 rm -rf .repo/local_manifests device/nokia/PL2 device/nokia/sdm660-common kernel/nokia/sdm660 vendor/nokia vendor/dolby .repo/projects/vendor/dolby.git .repo/project-objects/*dolby*
 
-# Check frameworks/base git origin: purge if tracking LineageOS, reset if dirty Zoro-15
+# Check frameworks/base git origin: purge working directory if tracking LineageOS (do NOT purge .repo/project-objects)
 if [ -d "frameworks/base/.git" ]; then
     FB_ORIGIN=$(git -C frameworks/base config --get remote.origin.url 2>/dev/null || true)
     if [[ "$FB_ORIGIN" != *"Zoro-15/android_frameworks_base"* ]]; then
-        echo "Stale LineageOS frameworks/base detected: purging to force Zoro-15 sync..."
-        rm -rf frameworks/base .repo/projects/frameworks/base.git .repo/project-objects/*frameworks*base*
+        echo "Stale LineageOS frameworks/base detected: purging directory to force Zoro-15 sync..."
+        rm -rf frameworks/base
     else
         (cd frameworks/base && git checkout -- . 2>/dev/null && git clean -fd 2>/dev/null || true)
     fi
@@ -47,12 +53,23 @@ find .repo/project-objects/ -type d -name "hooks" -exec rm -rf {} + 2>/dev/null 
 # Initialize LineageOS 17.1 manifest
 repo init -u https://github.com/LineageOS-Revived/android.git -b lineage-17.1 --git-lfs --depth=1
 
+# Ensure workspace git state is clean before resync
+if [ -d ".git" ]; then
+    git reset --hard HEAD 2>/dev/null || true
+    git clean -fd 2>/dev/null || true
+fi
+
 # Configure PL2 local manifest
 mkdir -p .repo/local_manifests
-if [ -f "device/nokia/PL2/lineage_pl2.xml" ]; then
-    cp device/nokia/PL2/lineage_pl2.xml .repo/local_manifests/nokia.xml
-else
-    cat > .repo/local_manifests/nokia.xml <<'XML'
+
+# Dynamically resolve exact upstream project name registered at path frameworks/base
+BASE_PROJECT=""
+if [ -f ".repo/manifest.xml" ]; then
+    BASE_PROJECT=$(grep 'path="frameworks/base"' .repo/manifest.xml 2>/dev/null | grep -oE 'name="[^"]+"' | head -n 1 | cut -d'"' -f2 || true)
+fi
+[ -z "$BASE_PROJECT" ] && BASE_PROJECT="LineageOS-Revived/android_frameworks_base"
+
+cat > .repo/local_manifests/nokia.xml <<XML
 <?xml version="1.0" encoding="UTF-8"?>
 <manifest>
   <remote name="zoro" fetch="https://github.com/Zoro-15" revision="lineage-17.1"/>
@@ -60,11 +77,10 @@ else
   <project path="device/nokia/sdm660-common" name="android_device_nokia_sdm660-common" remote="zoro"/>
   <project path="kernel/nokia/sdm660" name="android_kernel_nokia_sdm660" remote="zoro"/>
   <project path="vendor/nokia" name="proprietary_vendor_nokia" remote="zoro"/>
-  <remove-project name="LineageOS/android_frameworks_base"/>
+  <remove-project name="${BASE_PROJECT}"/>
   <project path="frameworks/base" name="android_frameworks_base" remote="zoro"/>
 </manifest>
 XML
-fi
 
 # Sync sources
 if [ -f /usr/bin/resync ]; then /usr/bin/resync; else /opt/crave/resync.sh; fi
@@ -78,7 +94,13 @@ repo sync -c --force-sync --force-remove-dirty --no-tags --no-clone-bundle --pru
 if [ ! -d "frameworks/base" ]; then
     git clone --depth=1 -b lineage-17.1 https://github.com/Zoro-15/android_frameworks_base.git frameworks/base
 else
-    (cd frameworks/base && git fetch origin lineage-17.1 2>/dev/null || true && git checkout lineage-17.1 2>/dev/null || true && git reset --hard origin/lineage-17.1 2>/dev/null || true)
+    FB_ORIGIN=$(git -C frameworks/base config --get remote.origin.url 2>/dev/null || true)
+    if [[ "$FB_ORIGIN" != *"Zoro-15/android_frameworks_base"* ]]; then
+        rm -rf frameworks/base
+        git clone --depth=1 -b lineage-17.1 https://github.com/Zoro-15/android_frameworks_base.git frameworks/base
+    else
+        (cd frameworks/base && git fetch origin lineage-17.1 2>/dev/null || true && git checkout lineage-17.1 2>/dev/null || true && git reset --hard origin/lineage-17.1 2>/dev/null || true)
+    fi
 fi
 
 # Legacy ncurses dependencies for Android 10 host tools

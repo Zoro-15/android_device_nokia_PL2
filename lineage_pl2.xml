@@ -8,6 +8,6 @@
   <project path="vendor/nokia" name="proprietary_vendor_nokia" remote="zoro" />
 
   <!-- Core Framework Override -->
-  <remove-project name="LineageOS/android_frameworks_base" />
+  <remove-project name="LineageOS-Revived/android_frameworks_base" />
   <project path="frameworks/base" name="android_frameworks_base" remote="zoro" />
 </manifest>
