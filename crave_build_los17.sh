@@ -103,14 +103,14 @@ else
         rm -rf frameworks/base
         git clone --depth=1 -b lineage-17.1 https://github.com/Zoro-15/android_frameworks_base.git frameworks/base
     else
-        (cd frameworks/base && git fetch origin lineage-17.1 2>/dev/null || true && git checkout lineage-17.1 2>/dev/null || true && git reset --hard origin/lineage-17.1 2>/dev/null || true)
+        (cd frameworks/base && git fetch origin lineage-17.1 2>/dev/null || true && git reset --hard origin/lineage-17.1 2>/dev/null || true && git clean -fd 2>/dev/null || true)
     fi
 fi
 
 # Legacy ncurses dependencies for Android 10 host tools
-if [ ! -f /usr/lib/x86_64-linux-gnu/libncurses.so.5 ] || [ ! -f /usr/lib/x86_64-linux-gnu/libtinfo.so.5 ]; then
+if [ ! -f /usr/lib/x86_64-linux-gnu/libncurses.so.5 ] || [ ! -f /usr/lib/x86_64-linux-gnu/libtinfo.so.5 ] || [ ! -f /sbin/depmod ]; then
     sudo apt-get update -qq 2>/dev/null || true
-    sudo apt-get install -y -qq wget curl 2>/dev/null || true
+    sudo apt-get install -y -qq wget curl kmod 2>/dev/null || true
     P="http://archive.ubuntu.com/ubuntu/pool/universe/n/ncurses"
     T=$(curl -sL "$P/" | grep -oE 'libtinfo5_[^"<> ]+_amd64\.deb' | sort -V | tail -1)
     N=$(curl -sL "$P/" | grep -oE 'libncurses5_[^"<> ]+_amd64\.deb' | sort -V | tail -1)
@@ -149,6 +149,7 @@ echo "========================================================"
 # Clean prior intermediate files
 rm -rf out/target/product/PL2/obj/KERNEL_OBJ
 rm -rf out/target/product/PL2/boot.img out/target/product/PL2/recovery.img
+rm -rf out/soong/.intermediates/frameworks/base/packages/SystemUI
 
 # Setup build environment and compile
 source build/envsetup.sh
