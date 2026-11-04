@@ -155,7 +155,7 @@ rm -rf out/soong/.intermediates/frameworks/base/packages/SystemUI
 source build/envsetup.sh
 lunch lineage_PL2-userdebug
 make installclean
-mka bacon -j$(nproc --all)
+mka -k bacon -j$(nproc --all)
 
 # Upload ROM artifact to gofile
 cd out/target/product/PL2
