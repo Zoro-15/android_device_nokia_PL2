@@ -15,7 +15,11 @@ TARGET_SCREEN_HEIGHT := 1920
 TARGET_SCREEN_WIDTH := 1080
 
 # Dalvik
-$(call inherit-product, frameworks/native/build/phone-xhdpi-4096-dalvik-heap.mk)
+$(call inherit-product, frameworks/native/build/phone-xxhdpi-3072-dalvik-heap.mk)
+
+PRODUCT_PRODUCT_PROPERTIES += \
+    dalvik.vm.dex2oat-cpu-set=4,5,6,7 \
+    dalvik.vm.background-dex2oat-cpu-set=4,5,6,7
 
 # FM
 PRODUCT_PACKAGES += \
