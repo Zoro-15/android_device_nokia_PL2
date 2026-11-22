@@ -39,6 +39,16 @@ on property:sys.boot_completed=1
          -exec /vendor/bin/toybox_vendor setfattr -x security.sehash {} \;
     restorecon_recursive /data/system/users/
 
+    # Override cpusets for SDM630 inverted cluster (0-3 Big @ 2.2GHz, 4-7 Little @ 1.8GHz)
+    write /dev/cpuset/top-app/cpus 0-7
+    write /dev/cpuset/foreground/cpus 0-7
+    write /dev/cpuset/background/cpus 4-7
+    write /dev/cpuset/system-background/cpus 4-7
+    write /dev/cpuset/restricted/cpus 4-7
+
+    # Colocate top-app tasks onto Big cluster
+    write /dev/stune/top-app/schedtune.colocate 1
+
 on property:ro.boot.simslot=1
     setprop persist.radio.multisim.config ss
 

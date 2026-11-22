@@ -279,43 +279,43 @@
     {
       "PowerHint": "INTERACTION",
       "Node": "CPULittleClusterMinFreq",
-      "Duration": 1000,
+      "Duration": 150,
       "Value": "1382400"
     },
     {
       "PowerHint": "INTERACTION",
       "Node": "CPUBigClusterMinFreq",
-      "Duration": 1000,
+      "Duration": 150,
       "Value": "1670400"
     },
     {
       "PowerHint": "INTERACTION",
       "Node": "CPULittleClusterMaxFreq",
-      "Duration": 1000,
+      "Duration": 150,
       "Value": "1728000"
     },
     {
       "PowerHint": "INTERACTION",
       "Node": "CPUBigClusterMaxFreq",
-      "Duration": 1000,
+      "Duration": 150,
       "Value": "2208000"
     },
     {
       "PowerHint": "INTERACTION",
       "Node": "TASchedtuneBoost",
-      "Duration": 1000,
+      "Duration": 150,
       "Value": "5"
     },
     {
       "PowerHint": "INTERACTION",
       "Node": "CPUBWMinFreq",
-      "Duration": 1000,
+      "Duration": 150,
       "Value": "2929"
     },
     {
       "PowerHint": "INTERACTION",
       "Node": "GPUMinFreq",
-      "Duration": 1000,
+      "Duration": 150,
       "Value": "465000000"
     },
     {
