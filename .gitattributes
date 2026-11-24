@@ -1,0 +1,8 @@
+# Enforce UNIX line endings for all files
+* text=auto eol=lf
+*.sh text eol=lf
+*.te text eol=lf
+*.rc text eol=lf
+*.prop text eol=lf
+*.mk text eol=lf
+*.xml text eol=lf
