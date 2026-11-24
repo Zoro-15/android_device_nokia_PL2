@@ -1,5 +1,6 @@
 #
 # SPDX-FileCopyrightText: The LineageOS Project
+# SPDX-FileCopyrightText: The Clover Project
 # SPDX-License-Identifier: Apache-2.0
 #
 
@@ -11,6 +12,10 @@ BOARD_SUPER_PARTITION_VENDOR_DEVICE_SIZE := 1073741824
 
 # Inherit from nokia sdm660-common
 -include device/nokia/sdm660-common/BoardConfigCommon.mk
+
+# Inherit from Clover
+-include vendor/clover/config/BoardConfigClover.mk
+-include vendor/clover/config/BoardConfigReservedSize.mk
 
 # Architecture
 TARGET_CPU_VARIANT_RUNTIME := cortex-a53
