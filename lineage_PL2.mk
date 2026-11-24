@@ -25,3 +25,11 @@ PRODUCT_BUILD_PROP_OVERRIDES += \
     BuildDesc="Plate2_00WW-user 10 QKQ1.190828.002 00WW_4_15O release-keys" \
     BuildFingerprint=Nokia/Plate2_00WW/PL2_sprout:10/QKQ1.190828.002/00WW_4_15O:user/release-keys \
     DeviceProduct=PL2_sprout
+
+# Debloat non-essential packages
+PRODUCT_PACKAGES_REMOVE += \
+    LiveWallpapersPicker \
+    BookmarkProvider \
+    DeviceAsWebcam \
+    PhotoTable \
+    BasicDreams
