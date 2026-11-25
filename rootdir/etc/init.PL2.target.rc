@@ -34,8 +34,9 @@ on property:ro.boot.nfc=nxp
     setprop ro.hardware.nfc_nci nqx.default
     enable vendor.nfc_hal_service
 
-on property:sys.boot_completed=1
+on property:vendor.powerhal.init=1
     # Override cpusets for SDM630 inverted cluster (0-3 Big @ 2.2GHz, 4-7 Little @ 1.8GHz)
+    # Triggered after init.target.rc sets vendor.powerhal.init=1 to avoid boot_completed race
     write /dev/cpuset/top-app/cpus 0-7
     write /dev/cpuset/foreground/cpus 0-7
     write /dev/cpuset/background/cpus 4-7
