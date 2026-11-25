@@ -2,7 +2,7 @@
   "Nodes": [
     {
       "Name": "CPULittleClusterMaxFreq",
-      "Path": "/sys/devices/system/cpu/cpu4/cpufreq/scaling_max_freq",
+      "Paths": ["/sys/devices/system/cpu/cpu4/cpufreq/scaling_max_freq"],
       "Values": [
         "1843200",
         "1728000",
@@ -17,7 +17,7 @@
     },
     {
       "Name": "CPULittleClusterMinFreq",
-      "Path": "/sys/devices/system/cpu/cpu4/cpufreq/scaling_min_freq",
+      "Paths": ["/sys/devices/system/cpu/cpu4/cpufreq/scaling_min_freq"],
       "Values": [
         "1843200",
         "1728000",
@@ -31,7 +31,7 @@
     },
     {
       "Name": "CPUBigClusterMaxFreq",
-      "Path": "/sys/devices/system/cpu/cpu0/cpufreq/scaling_max_freq",
+      "Paths": ["/sys/devices/system/cpu/cpu0/cpufreq/scaling_max_freq"],
       "Values": [
         "2208000",
         "2150400",
@@ -48,7 +48,7 @@
     },
     {
       "Name": "CPUBigClusterMinFreq",
-      "Path": "/sys/devices/system/cpu/cpu0/cpufreq/scaling_min_freq",
+      "Paths": ["/sys/devices/system/cpu/cpu0/cpufreq/scaling_min_freq"],
       "Values": [
         "2208000",
         "2150400",
@@ -64,7 +64,7 @@
     },
     {
       "Name": "GPUMaxFreq",
-      "Path": "/sys/class/kgsl/kgsl-3d0/devfreq/max_freq",
+      "Paths": ["/sys/class/kgsl/kgsl-3d0/devfreq/max_freq"],
       "Values": [
         "700000000",
         "647000000",
@@ -79,7 +79,7 @@
     },
     {
       "Name": "GPUMinFreq",
-      "Path": "/sys/class/kgsl/kgsl-3d0/devfreq/min_freq",
+      "Paths": ["/sys/class/kgsl/kgsl-3d0/devfreq/min_freq"],
       "Values": [
         "700000000",
         "647000000",
@@ -93,7 +93,7 @@
     },
     {
       "Name": "GPUBusMaxFreq",
-      "Path": "/sys/class/devfreq/soc:qcom,gpubw/max_freq",
+      "Paths": ["/sys/class/devfreq/soc:qcom,gpubw/max_freq"],
       "Values": [
         "5161",
         "4943",
@@ -113,7 +113,7 @@
     },
     {
       "Name": "GPUBusMinFreq",
-      "Path": "/sys/class/devfreq/soc:qcom,gpubw/min_freq",
+      "Paths": ["/sys/class/devfreq/soc:qcom,gpubw/min_freq"],
       "Values": [
         "5161",
         "4943",
@@ -132,7 +132,7 @@
     },
     {
       "Name": "GPUForceRailOn",
-      "Path": "/sys/class/kgsl/kgsl-3d0/force_rail_on",
+      "Paths": ["/sys/class/kgsl/kgsl-3d0/force_rail_on"],
       "Values": [
         "1",
         "0"
@@ -141,7 +141,7 @@
     },
     {
       "Name": "GPUForceClkOn",
-      "Path": "/sys/class/kgsl/kgsl-3d0/force_clk_on",
+      "Paths": ["/sys/class/kgsl/kgsl-3d0/force_clk_on"],
       "Values": [
         "1",
         "0"
@@ -150,7 +150,7 @@
     },
     {
       "Name": "GPUIdleTimer",
-      "Path": "/sys/class/kgsl/kgsl-3d0/idle_timer",
+      "Paths": ["/sys/class/kgsl/kgsl-3d0/idle_timer"],
       "Values": [
         "10000",
         "80"
@@ -159,18 +159,17 @@
     },
     {
       "Name": "TASchedtuneBoost",
-      "Path": "/dev/stune/top-app/schedtune.boost",
+      "Paths": ["/dev/stune/top-app/schedtune.boost"],
       "Values": [
         "10",
         "5",
         "1",
         "0"
-      ],
-      "ResetOnInit": true
+      ]
     },
     {
       "Name": "CPUBWMaxFreq",
-      "Path": "/sys/class/devfreq/soc:qcom,cpu-cpu-ddr-bw/max_freq",
+      "Paths": ["/sys/class/devfreq/soc:qcom,cpu-cpu-ddr-bw/max_freq"],
       "Values": [
         "5161",
         "4943",
@@ -189,7 +188,7 @@
     },
     {
       "Name": "CPUBWMinFreq",
-      "Path": "/sys/class/devfreq/soc:qcom,cpu-cpu-ddr-bw/min_freq",
+      "Paths": ["/sys/class/devfreq/soc:qcom,cpu-cpu-ddr-bw/min_freq"],
       "Values": [
         "5161",
         "4943",
@@ -207,7 +206,7 @@
     },
     {
       "Name": "PowerHALMainState",
-      "Path": "vendor.powerhal.state",
+      "Paths": ["vendor.powerhal.state"],
       "Values": [
         "SUSTAINED_PERFORMANCE",
         ""
@@ -216,7 +215,7 @@
     },
     {
       "Name": "PowerHALRenderingState",
-      "Path": "vendor.powerhal.rendering",
+      "Paths": ["vendor.powerhal.rendering"],
       "Values": [
         "EXPENSIVE_RENDERING",
         ""
@@ -225,7 +224,7 @@
     },
     {
       "Name": "DoubleTapToWakeEnable",
-      "Path": "/proc/AllHWList/tp_double_tap",
+      "Paths": ["/proc/AllHWList/tp_double_tap"],
       "Values": [
           "0",
           "1"
