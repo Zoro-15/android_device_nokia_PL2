@@ -24,7 +24,7 @@ PRODUCT_GMS_CLIENTID_BASE := android-hmd
 
 # Set Clover build device identifier if not already defined
 CLOVER_BUILD ?= PL2
-CLOVER_BUILDTYPE := UNOFFICIAL
+CLOVER_BUILDTYPE := OFFICIAL
 CLOVER_MAINTAINER ?= Abhi
 
 TARGET_ENABLE_BLUR := false
