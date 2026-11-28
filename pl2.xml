@@ -15,4 +15,7 @@
 
   <!-- Hardware NFC (Samsung SLSI) -->
   <project path="hardware/samsung_slsi/nfc" name="LineageOS/android_hardware_samsung_slsi_nfc" revision="lineage-24.0" remote="github" />
+
+  <!-- Dolby Atmos -->
+  <project path="vendor/dolby" name="AndroidOne-Experience/vendor_dolby" revision="v1.2" remote="github" />
 </manifest>
