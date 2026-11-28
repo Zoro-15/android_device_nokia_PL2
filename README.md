@@ -20,7 +20,11 @@ It was released in April 2018.
 
 ## Build Instructions (CloverOS)
 
-1. Initialize and sync the CloverOS source tree (`repo init` / `repo sync`).
+1. Initialize the CloverOS source tree (shallow clone with `--depth=1`):
+
+```bash
+repo init -u https://github.com/The-Clover-Project/manifest.git -b 17 --git-lfs --depth=1
+```
 
 2. Add the local manifest for Nokia 6.1 (`PL2`):
 
@@ -29,10 +33,10 @@ mkdir -p .repo/local_manifests
 curl -fsSL https://raw.githubusercontent.com/Nokia-Playground/android_device_nokia_PL2/Clover-4.x/pl2.xml -o .repo/local_manifests/pl2.xml
 ```
 
-3. Sync the device, common, kernel, vendor, and NFC repositories:
+3. Sync the CloverOS source along with the device, common, kernel, vendor, and NFC repositories:
 
 ```bash
-repo sync -c -j$(nproc --all) --force-sync --no-clone-bundle --no-tags
+repo sync -c --force-sync --optimized-fetch --no-tags --no-clone-bundle --prune -j$(nproc --all)
 ```
 
 4. Set up the build environment, select the target, and start the build:
