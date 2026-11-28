@@ -1,4 +1,4 @@
-ifeq ($(WITH_CORE_GMS),true)
+ifeq ($(WITH_GMS),core)
 
 PRODUCT_SOONG_NAMESPACES += \
     vendor/pixel/gms/common
