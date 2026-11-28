@@ -1,0 +1,137 @@
+
+project bootable/recovery/
+diff --git a/volume_manager/PublicVolume.cpp b/volume_manager/PublicVolume.cpp
+index b04135f..b9defef 100644
+--- a/volume_manager/PublicVolume.cpp
++++ b/volume_manager/PublicVolume.cpp
+@@ -1,3 +1,4 @@
++#include <algorithm>
+ /*
+  * Copyright (C) 2015 The Android Open Source Project
+  * Copyright (C) 2019 The LineageOS Project
+diff --git a/volume_manager/include/volume_manager/VolumeManager.h b/volume_manager/include/volume_manager/VolumeManager.h
+index c2cb8dd..e3495c1 100644
+--- a/volume_manager/include/volume_manager/VolumeManager.h
++++ b/volume_manager/include/volume_manager/VolumeManager.h
+@@ -1,3 +1,4 @@
++#include <vector>
+ /*
+  * Copyright (C) 2008 The Android Open Source Project
+  * Copyright (C) 2019 The LineageOS Project
+
+project external/dng_sdk/
+diff --git a/Android.bp b/Android.bp
+index 02e6e8a..99e08d1 100644
+--- a/Android.bp
++++ b/Android.bp
+@@ -185,7 +185,6 @@ cc_library {
+     name: "libdng_sdk",
+     host_supported: true,
+     defaults: ["libdng_sdk-defaults"],
+-    vendor_available: true,
+ 
+     sanitize: {
+         // For now we want to disable the ubsan_minimal runtime so that we can
+
+project external/libjxl/
+diff --git a/Android.bp b/Android.bp
+index 18741882..b6b14041 100644
+--- a/Android.bp
++++ b/Android.bp
+@@ -17,7 +17,6 @@ license {
+ cc_library {
+     name: "libjxl",
+     host_supported: true,
+-    vendor_available: true,
+     cflags: [
+         "-DJPEGXL_ENABLE_SKCMS=1",
+     ],
+
+project hardware/clover/interfaces/
+diff --git a/biometrics/fingerprint/aidl/Session.cpp b/biometrics/fingerprint/aidl/Session.cpp
+index b4faf6b..872c9ea 100644
+--- a/biometrics/fingerprint/aidl/Session.cpp
++++ b/biometrics/fingerprint/aidl/Session.cpp
+@@ -1,3 +1,4 @@
++#include <functional>
+ /*
+  * Copyright (C) 2024 The LineageOS Project
+  *
+
+project hardware/qcom-caf/sdm660/audio/
+diff --git a/hal/Android.bp b/hal/Android.bp
+index 46486625..c6e490c0 100644
+--- a/hal/Android.bp
++++ b/hal/Android.bp
+@@ -53,6 +53,7 @@ target_board_platform_cc_library_shared {
+     }),
+ 
+     cflags: [
++        "-fcommon",
+         "-Werror",
+         "-D_GNU_SOURCE",
+         "-DHW_VARIANTS_ENABLED",
+
+project hardware/qcom-caf/wlan/
+diff --git a/qcwcn/wpa_supplicant_8_lib/Android.bp b/qcwcn/wpa_supplicant_8_lib/Android.bp
+index 56406d6..10f12f5 100644
+--- a/qcwcn/wpa_supplicant_8_lib/Android.bp
++++ b/qcwcn/wpa_supplicant_8_lib/Android.bp
+@@ -43,6 +43,7 @@ cc_library_static {
+         "libnl",
+     ],
+     cflags: [
++        "-fcommon",
+         "-DCONFIG_ANDROID_LOG",
+         "-DCONFIG_P2P",
+         "-Wall",
+@@ -72,6 +73,7 @@ cc_library_static {
+     arch: {
+         arm: {
+             cflags: [
++        "-fcommon",
+                 "-mabi=aapcs-linux",
+             ],
+         },
+
+project system/vold/
+diff --git a/model/PublicVolume.cpp b/model/PublicVolume.cpp
+index bf7aaa6..c1bec3a 100644
+--- a/model/PublicVolume.cpp
++++ b/model/PublicVolume.cpp
+@@ -1,3 +1,4 @@
++#include <algorithm>
+ /*
+  * Copyright (C) 2015 The Android Open Source Project
+  *
+
+project vendor/qcom/opensource/data-ipa-cfg-mgr-legacy-um/
+diff --git a/ipacm/inc/IPACM_OffloadManager.h b/ipacm/inc/IPACM_OffloadManager.h
+index 146fde8..1808bef 100644
+--- a/ipacm/inc/IPACM_OffloadManager.h
++++ b/ipacm/inc/IPACM_OffloadManager.h
+@@ -1,3 +1,4 @@
++#include <vector>
+ /*
+  * Copyright (c) 2017-2021, The Linux Foundation. All rights reserved.
+  *
+
+project vendor/qcom/opensource/vibrator/
+diff --git a/aidl/VibratorSelector/VibratorSelector.cpp b/aidl/VibratorSelector/VibratorSelector.cpp
+index e1f8a4b..79ba6c1 100644
+--- a/aidl/VibratorSelector/VibratorSelector.cpp
++++ b/aidl/VibratorSelector/VibratorSelector.cpp
+@@ -1,3 +1,4 @@
++#include <memory>
+ /*
+  * Copyright (c) 2024 Qualcomm Innovation Center, Inc. All rights reserved.
+  * SPDX-License-Identifier: BSD-3-Clause-Clear
+diff --git a/aidl/VibratorSelector/VibratorSelector.h b/aidl/VibratorSelector/VibratorSelector.h
+index 3076c44..d77031c 100644
+--- a/aidl/VibratorSelector/VibratorSelector.h
++++ b/aidl/VibratorSelector/VibratorSelector.h
+@@ -1,3 +1,4 @@
++#include <memory>
+ /*
+  * Copyright (c) 2024 Qualcomm Innovation Center, Inc. All rights reserved.
+  * SPDX-License-Identifier: BSD-3-Clause-Clear
