@@ -32,3 +32,5 @@ TARGET_ENABLE_BLUR := false
 PRODUCT_BUILD_PROP_OVERRIDES += \
     BuildDesc="Plate2_00WW-user 10 QKQ1.190828.002 00WW_4_15O release-keys" \
     DeviceProduct=PL2_sprout
+
+$(call inherit-product, device/nokia/PL2/gms_core.mk)
