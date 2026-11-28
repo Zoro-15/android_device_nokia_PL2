@@ -2,7 +2,7 @@
   {
     "repository": "android_device_nokia_sdm660-common",
     "target_path": "device/nokia/sdm660-common",
-    "branch": "Clover-4.X"
+    "branch": "Clover-4.x"
   },
   {
     "repository": "android_hardware_samsung_slsi_nfc",
